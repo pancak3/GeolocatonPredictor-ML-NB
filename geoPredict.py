@@ -1,4 +1,5 @@
 import os
+import errno
 import pandas as pd
 
 
@@ -50,6 +51,16 @@ class FileLoader:
                 content.append(real_line[1:].encode(encoding='UTF-8'))
             f.close()
             f_path = os.path.join(self.config.MY_DATA_PATH, filename)
+
+            '''
+            @https://stackoverflow.com/questions/12517451/automatically-creating-directories-with-file-output/12517490
+            '''
+            try:
+                os.makedirs(os.path.dirname(f_path))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
             f = open(f_path, mode='wb+')
             f.write(self.config.SET_HEAD)
             f.writelines(content)
