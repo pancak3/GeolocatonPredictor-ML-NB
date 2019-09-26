@@ -1,5 +1,6 @@
 import os
 import errno
+import logging
 import pandas as pd
 
 
@@ -19,14 +20,26 @@ class FileLoader:
     config = Config()
     pass
 
-    def __init__(self):
-        self.file_fixer()
+    # def __init__(self):
+    #     self.file_fixer()
+    #
+    #     f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
+    #     self.train_set = pd.read_csv(f_path)
+    #     f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
+    #
+    #     pass
 
+    def file_load(self):
+        # files = [self.config.DEV_NAME, self.config.TRAIN_NAME, self.config.TEST_NAME]
+        # for filename in files:
         f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
         self.train_set = pd.read_csv(f_path)
-        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
 
-        pass
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TEST_NAME)
+        self.test_set = pd.read_csv(f_path)
+
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.DEV_NAME)
+        self.dev_set = pd.read_csv(f_path)
 
     def file_fixer(self):
         def fix(filename):
@@ -65,6 +78,8 @@ class FileLoader:
             f.write(self.config.SET_HEAD)
             f.writelines(content)
             f.close()
+            logger = logging.getLogger("file_fixer")
+            logger.debug("[*] {} saved".format(f_path))
 
         fix(self.config.TRAIN_NAME)
         fix(self.config.TEST_NAME)
@@ -72,6 +87,8 @@ class FileLoader:
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     file = FileLoader()
     # file.file_fixer()
-    pass
+    file.file_load()
+    print()
