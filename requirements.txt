@@ -1,0 +1,5 @@
+request
+pandas
+tqdm
+nltk
+
