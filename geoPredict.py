@@ -2,8 +2,10 @@ import os
 import errno
 import logging
 import re
+import tqdm
 import csv
 import pandas as pd
+import numpy as np
 import shapefile as shp
 
 from pprint import pprint
@@ -18,6 +20,8 @@ class Config:
     TEST_NAME = "test_tweets.txt"
     TRAIN_NAME = "train_tweets.txt"
     SHP_PATH = "shapefiles"
+    FEATURES_NAME = 'features.csv'
+    GAZETTEER_IN_TWEETS_PATH = "gazetteer_in_tweets.txt"
     SHP = ("California", "NewYork", "Georgia")
     SHP_FILENAME = ("tl_2019_06_place", "tl_2019_36_place", "tl_2019_13_place")
     SET_HEAD = "tweet_id,user,tweet,geotag\n".encode(encoding='UTF-8')
@@ -30,16 +34,6 @@ class FileLoader:
     token_frequency = None
     gazetteer = {}
     config = Config()
-    pass
-
-    # def __init__(self):
-    #     self.file_fixer()
-    #
-    #     f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
-    #     self.train_set = pd.read_csv(f_path)
-    #     f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
-    #
-    #     pass
 
     def file_load(self):
         # files = [self.config.DEV_NAME, self.config.TRAIN_NAME, self.config.TEST_NAME]
@@ -52,6 +46,16 @@ class FileLoader:
 
         f_path = os.path.join(self.config.MY_DATA_PATH, self.config.DEV_NAME)
         self.dev_set = pd.read_csv(f_path, encoding="ISO-8859-1")
+
+        for idx, geotag in enumerate(self.config.SHP):
+            f_path = os.path.join(self.config.MY_DATA_PATH, 'gazetteer_' + geotag + '.txt')
+            self.gazetteer[geotag] = set(open(f_path).read().split('\n'))
+        self.gazetteer.update({'all': set(())})
+
+        for gaze in self.gazetteer.items():
+            if gaze[0] != 'all':
+                self.gazetteer["all"].update(gaze[1])
+        self.gazetteer['all'].remove('')
 
     def file_fixer(self):
         def fix(filename):
@@ -137,6 +141,46 @@ class FileLoader:
 
             write_file(self.gazetteer[geotag], f_path)
 
+
+class Features:
+    config = Config()
+    data = FileLoader()
+
+    features = pd.DataFrame(data={})
+
+    def __init__(self):
+        self.data.file_load()
+
+    def select_user(self):
+        self.features['user'] = self.data.train_set['user']
+
+    def load_features(self):
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_NAME)
+        self.features = pd.read_csv(f_path)
+        pass
+
+    def calc_gazetteer(self):
+
+        for gaze in tqdm.tqdm(self.data.gazetteer['all'], unit=" gazes"):
+            self.features[gaze] = pd.DataFrame(np.zeros((self.data.train_set.shape[0], 1))).iloc[:, 0]
+
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
+        f = open(f_path)
+        # use O(1) to find first then use O(n)
+        for idx, tweet in enumerate(self.data.train_set['tweet']):
+            self.features.loc[idx, gaze] = int(gaze in tweet)
+
+    def get_gazetteer_in_tweets(self):
+        logging.info("[*] Capturing gazetteers ...")
+        gazetteers = set(())
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
+        f = open(f_path, encoding='ISO-8859-1').read()
+        for gaze in tqdm.tqdm(self.data.gazetteer['all'], unit=' gazetteers'):
+            p = re.compile(gaze)
+            if gaze != '' and len(re.findall(p, f)) > 0:
+                gazetteers.add(gaze)
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.GAZETTEER_IN_TWEETS_PATH)
+        write_file(gazetteers, f_path)
         print()
 
 
@@ -144,17 +188,22 @@ def write_file(contents, f_path):
     logger = logging.getLogger("write_file")
     f = open(f_path, encoding='utf-8', errors='ignore', mode='w+')
     for line in contents:
-        f.write(line + "\n")
+        f.writelines(line + "\n")
     f.close()
-    logger.info("Wrote {} lines in {}.".format(
-        len(contents), f_path))
+    logger.info("Wrote {} lines in {}.".format(len(contents), f_path))
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     file = FileLoader()
     # file.file_fixer()
-    file.file_load()
+    # file.file_load()
     # file.freq_dist()
     file.geography_gazetteer()
-    print(str(file.dev_set['tweet'][24]))
+    feature = Features()
+    # feature.get_gazetteer_in_tweets()
+    # feature.select_user()
+    # feature.load_features()
+    feature.calc_gazetteer()
+    print()
+    # print(str(file.dev_set['tweet'][24]))
