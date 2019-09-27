@@ -2,4 +2,4 @@ request
 pandas
 tqdm
 nltk
-
+PyShp
