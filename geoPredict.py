@@ -11,6 +11,8 @@ import shapefile as shp
 from pprint import pprint
 from nltk.probability import FreqDist
 from nltk.tokenize import word_tokenize
+from sklearn.naive_bayes import MultinomialNB
+from sklearn import metrics
 
 
 class Config:
@@ -20,11 +22,15 @@ class Config:
     TEST_NAME = "test_tweets.txt"
     TRAIN_NAME = "train_tweets.txt"
     SHP_PATH = "shapefiles"
-    FEATURES_GAZE_NAME = 'features_gazetteer.csv'
+    FEATURES_GAZE_TRAIN_NAME = 'features_gazetteer.csv'
+    FEATURES_GAZE_DEV_NAME = 'features_gazetteer_dev.csv'
     GAZETTEER_IN_TWEETS_PATH = "gazetteer_in_tweets.txt"
     SHP = ("California", "NewYork", "Georgia")
     SHP_FILENAME = ("tl_2019_06_place", "tl_2019_36_place", "tl_2019_13_place")
     SET_HEAD = "tweet_id,user,tweet,geotag\n".encode(encoding='UTF-8')
+
+    MAP = {"California": 0, "NewYork": 1, "Georgia": 2}
+    REMAP = {0: "California", 1: "NewYork", 2: "Georgia"}
 
 
 class FileLoader:
@@ -79,6 +85,7 @@ class FileLoader:
                 for column in real_columns:
                     real_line += ',' + column
                 content.append(real_line[1:].encode(encoding="ISO-8859-1"))
+                # content.append(real_line[1:].encode(encoding="UTF-8"))
                 # content.append(real_line[1:])
             f_path = os.path.join(self.config.MY_DATA_PATH, filename)
 
@@ -158,7 +165,7 @@ class Features:
         self.features['user'] = self.data.train_set['user']
 
     def load_features(self):
-        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_NAME)
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_TRAIN_NAME)
         self.features = pd.read_csv(f_path)
         pass
 
@@ -180,13 +187,14 @@ class Features:
             _self.features[name].to_csv(f_path_, index=False)
             logging.info("[*] Saved %s." % f_path_)
 
+        logging.info("[*] Gathering gazetteer features in dev set")
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_DEV_NAME)
+        run(self, self.data.dev_set, f_path, 'dev')
+
         logging.info("[*] Gathering gazetteer features in train set")
-        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_NAME)
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_TRAIN_NAME)
         run(self, self.data.train_set, f_path, 'train')
 
-        logging.info("[*] Gathering gazetteer features in dev set")
-        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_NAME[:-4] + '_dev.csv')
-        run(self, self.data.dev_set, f_path, 'dev')
         # use O(1) to find first then use O(n)
 
     def get_gazetteer_in_tweets(self):
@@ -210,14 +218,44 @@ class Features:
                     gazetteers[gaze] = len(re.findall(gaze, f))
                 gazetteers = sorted(gazetteers, key=gazetteers.get)
                 res = res | set(gazetteers[-50:])
+                write_file(res, f_path)
+
         else:
             f = open(f_path).readlines()
             for gaze in f:
                 res.add(gaze[:-1])
+
         res = sorted(res)
         self.data.gazetteer['all'] = res
+        logging.info("[*] Loaded %d lines from %s.", len(res), f_path)
 
-        write_file(res, f_path)
+
+class Predict:
+    config = Config()
+
+    def complement_naive_bayes(self):
+        features = {}
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_TRAIN_NAME)
+        features["train"] = pd.read_csv(f_path)
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_DEV_NAME)
+        features["dev"] = pd.read_csv(f_path)
+        clf = MultinomialNB(alpha=0.01)
+        train = features["train"]
+        train_y = train['geotag'].map(self.config.MAP)
+        pprint(clf.fit(train.iloc[:, :-1], train_y))
+        dev = features["dev"]
+        res = clf.predict(dev.iloc[:, :-1])
+        result = pd.DataFrame({})
+        result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
+        result["actual"] = dev['geotag']
+
+        actual_y = dev["geotag"].map(self.config.MAP)
+        predict_y = res
+        accuracy = metrics.accuracy_score(actual_y, predict_y)
+        precision = metrics.precision_score(actual_y, predict_y, average='macro')
+        recall = metrics.recall_score(actual_y, predict_y, average='macro')
+        print(" accuracy:%s\n precision:%s\n recall:%s\n" % (accuracy, precision, recall))
+        pass
 
 
 def write_file(contents, f_path):
@@ -231,15 +269,17 @@ def write_file(contents, f_path):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    file = FileLoader()
+    # file = FileLoader()
     # file.file_fixer()
     # file.file_load()
     # file.freq_dist()
     # file.geography_gazetteer()
-    feature = Features()
-    feature.get_gazetteer_in_tweets()
+    # feature = Features()
+    # feature.get_gazetteer_in_tweets()
     # feature.select_user()
     # feature.load_features()
-    feature.calc_gazetteer()
+    # feature.calc_gazetteer()
+    predict = Predict()
+    predict.complement_naive_bayes()
     print()
     # print(str(file.dev_set['tweet'][24]))

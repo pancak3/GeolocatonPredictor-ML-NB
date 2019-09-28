@@ -3,3 +3,4 @@ pandas
 tqdm
 nltk
 PyShp
+sklearn
