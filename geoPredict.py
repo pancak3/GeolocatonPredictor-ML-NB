@@ -12,7 +12,7 @@ from pprint import pprint
 from nltk.probability import FreqDist
 from nltk.tokenize import word_tokenize
 from nltk import pos_tag
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import ComplementNB
 from sklearn import metrics
 import matplotlib.pyplot as plt
 
@@ -232,41 +232,87 @@ class Features:
         logging.info("[*] Loaded %d lines from %s.", len(res), f_path)
 
     def implement_paper(self):
-        train = self.data.train_set
-        p_t = re.compile(r'@\w+|RT|[^\w ]')
-        p_w = re.compile(r'[^\w+\s]')
-        at_user = 0
-        features = pd.DataFrame()
-        for idx, row in self.data.train_set.iloc[:, 2:].iterrows():
-            # character_set = set(row['tweet'])
-            # if '@' in character_set:
-            prep, prep_pp, pp, adj, verb, place_pp, defart_pp = 0, 0, 0, 0, 0, 0, 0
-            htah = row['tweet'].count('#')
+        def run(_self, data):
+            p_t = re.compile(r'@\w+|RT|[^\w ]')
+            _columns = ["prep", "prep_pp", "pp", "defart_pp", "htah", "adj", "verb"]
+            features = []
+            for idx, row in tqdm.tqdm(data.iloc[:, 2:].iterrows(), unit=' tweets',
+                                      total=data.shape[0]):
+                # character_set = set(row['tweet'])
+                # if '@' in character_set:
+                prep, prep_pp, pp, adj, verb, place_pp, defart_pp = 0, 0, 0, 0, 0, 0, 0
+                htah = row['tweet'].count('#')
 
-            text = re.sub(p_t, '', row['tweet']).replace('_', ' ').lower()
-            tokens = word_tokenize(text)
-            tags = pos_tag(tokens)
-            for idx_, token in enumerate(tags):
-                if token[1] in {'IN', 'TO'}:
-                    prep += 1
-                    if idx_ < len(tags) - 2:
-                        if tags[idx_ + 1][1] == 'NNP':
-                            prep_pp += 1
-                if 'NN' in token[1]:
-                    pp += 1
-                    if idx_ > 0:
-                        if tags[idx_ - 1][0] in ("town", "city", "state", "region", "country"):
-                            place_pp += 1
-                        if tags[idx_ - 1][0] == 'the':
-                            defart_pp += 1
-                if 'JJ' in token[1]:
-                    adj += 1
-                if 'VB' in token[1]:
-                    verb += 1
-            line = [prep, prep_pp, pp, place_pp, defart_pp, htah, adj, verb, row['geotag']]
-            print()
+                text = re.sub(p_t, '', row['tweet']).replace('_', ' ').lower()
+                tokens = word_tokenize(text)
+                tags = pos_tag(tokens)
+                for idx_, token in enumerate(tags):
+                    if token[1] in {'IN', 'TO'}:
+                        prep += 1
+                        if idx_ < len(tags) - 2:
+                            if tags[idx_ + 1][1] == 'NN':
+                                prep_pp += 1
+                    if 'NN' in token[1]:
+                        pp += 1
+                        if idx_ > 0:
+                            if tags[idx_ - 1][0] == 'the':
+                                defart_pp += 1
+                    if 'JJ' in token[1]:
+                        adj += 1
+                    if 'VB' in token[1]:
+                        verb += 1
+                line = [prep, prep_pp, pp, defart_pp, htah, adj, verb]
+                features.append(line)
+            df_features = pd.DataFrame(data=features, columns=_columns)
+            df_features['geotag'] = data['geotag']
+            return df_features
 
-            pass
+        def calc(_self):
+
+            train_features = run(_self, _self.data.train_set)
+            dev_features = run(_self, _self.data.dev_set)
+
+            train_features.to_csv("myData/features_paper.csv")
+            dev_features.to_csv("myData/features_paper_dev.csv")
+            return train_features, dev_features
+
+        f_path = "myData/features_paper.csv"
+        if os.stat(f_path).st_size == 0:
+            train_features, dev_features = calc(self)
+        else:
+            train_features, dev_features = pd.read_csv("myData/features_paper.csv"), pd.read_csv(
+                "myData/features_paper_dev.csv")
+        train = train_features
+        train_y = train['geotag'].map(self.config.MAP)
+        dev = dev_features
+
+        accuracy = []
+        precision = []
+        recall = []
+        f_score = []
+        r = range(1, 2)
+
+        for t in r:
+            clf = ComplementNB(alpha=t / 1)
+            pprint(clf.fit(train.iloc[:, :-1], train_y))
+            res = clf.predict(dev.iloc[:, :-1])
+
+            result = pd.DataFrame({})
+            result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
+            result["actual"] = dev['geotag']
+            actual_y = dev["geotag"].map(self.config.MAP)
+            pprint(result)
+            predict_y = res
+
+            accuracy.append(metrics.accuracy_score(actual_y, predict_y))
+            precision.append(metrics.precision_score(actual_y, predict_y, average='weighted'))
+            recall.append(metrics.recall_score(actual_y, predict_y, average='weighted'))
+            f_score.append(metrics.f1_score(actual_y, predict_y, average='weighted'))
+            print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (accuracy[-1], precision[-1], recall[-1], f_score[-1]))
+
+        # plt.plot(r, accuracy, '_', r, precision, '_', r, recall, '_', r, f_score, '_')
+        # plt.show()
+        # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (accuracy, precision, recall, f_score))
 
 
 class Predict:
@@ -278,31 +324,27 @@ class Predict:
         features["train"] = pd.read_csv(f_path)
         f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_DEV_NAME)
         features["dev"] = pd.read_csv(f_path)
+
         train = features["train"]
         train_y = train['geotag'].map(self.config.MAP)
 
         accuracy = []
         precision = []
         recall = []
-        r = range(1, 101)
-        for t in r:
-            clf = MultinomialNB(alpha=t / 100)
-            pprint(clf.fit(train.iloc[:, :-1], train_y))
-            dev = features["dev"]
-            res = clf.predict(dev.iloc[:, :-1])
-            result = pd.DataFrame({})
-            result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
-            result["actual"] = dev['geotag']
-            actual_y = dev["geotag"].map(self.config.MAP)
-            predict_y = res
 
-            accuracy.append(metrics.accuracy_score(actual_y, predict_y))
-            precision.append(metrics.precision_score(actual_y, predict_y, average='macro'))
-            recall.append(metrics.recall_score(actual_y, predict_y, average='macro'))
+        clf = MultinomialNB(alpha=0.01)
+        pprint(clf.fit(train.iloc[:, :-1], train_y))
+        dev = features["dev"]
+        res = clf.predict(dev.iloc[:, :-1])
+        result = pd.DataFrame({})
+        result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
+        result["actual"] = dev['geotag']
+        actual_y = dev["geotag"].map(self.config.MAP)
+        predict_y = res
 
-        plt.plot(r, accuracy, 'r--', r, precision, 'bs', r, recall, 'g^')
-        plt.show()
-        pass
+        accuracy.append(metrics.accuracy_score(actual_y, predict_y))
+        precision.append(metrics.precision_score(actual_y, predict_y, average='macro'))
+        recall.append(metrics.recall_score(actual_y, predict_y, average='macro'))
 
 
 def write_file(contents, f_path):
