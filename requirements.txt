@@ -4,3 +4,4 @@ tqdm
 nltk
 PyShp
 sklearn
+textblob

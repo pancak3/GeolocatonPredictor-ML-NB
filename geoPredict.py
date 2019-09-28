@@ -11,8 +11,10 @@ import shapefile as shp
 from pprint import pprint
 from nltk.probability import FreqDist
 from nltk.tokenize import word_tokenize
+from nltk import pos_tag
 from sklearn.naive_bayes import MultinomialNB
 from sklearn import metrics
+import matplotlib.pyplot as plt
 
 
 class Config:
@@ -229,6 +231,43 @@ class Features:
         self.data.gazetteer['all'] = res
         logging.info("[*] Loaded %d lines from %s.", len(res), f_path)
 
+    def implement_paper(self):
+        train = self.data.train_set
+        p_t = re.compile(r'@\w+|RT|[^\w ]')
+        p_w = re.compile(r'[^\w+\s]')
+        at_user = 0
+        features = pd.DataFrame()
+        for idx, row in self.data.train_set.iloc[:, 2:].iterrows():
+            # character_set = set(row['tweet'])
+            # if '@' in character_set:
+            prep, prep_pp, pp, adj, verb, place_pp, defart_pp = 0, 0, 0, 0, 0, 0, 0
+            htah = row['tweet'].count('#')
+
+            text = re.sub(p_t, '', row['tweet']).replace('_', ' ').lower()
+            tokens = word_tokenize(text)
+            tags = pos_tag(tokens)
+            for idx_, token in enumerate(tags):
+                if token[1] in {'IN', 'TO'}:
+                    prep += 1
+                    if idx_ < len(tags) - 2:
+                        if tags[idx_ + 1][1] == 'NNP':
+                            prep_pp += 1
+                if 'NN' in token[1]:
+                    pp += 1
+                    if idx_ > 0:
+                        if tags[idx_ - 1][0] in ("town", "city", "state", "region", "country"):
+                            place_pp += 1
+                        if tags[idx_ - 1][0] == 'the':
+                            defart_pp += 1
+                if 'JJ' in token[1]:
+                    adj += 1
+                if 'VB' in token[1]:
+                    verb += 1
+            line = [prep, prep_pp, pp, place_pp, defart_pp, htah, adj, verb, row['geotag']]
+            print()
+
+            pass
+
 
 class Predict:
     config = Config()
@@ -239,22 +278,30 @@ class Predict:
         features["train"] = pd.read_csv(f_path)
         f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_DEV_NAME)
         features["dev"] = pd.read_csv(f_path)
-        clf = MultinomialNB(alpha=0.01)
         train = features["train"]
         train_y = train['geotag'].map(self.config.MAP)
-        pprint(clf.fit(train.iloc[:, :-1], train_y))
-        dev = features["dev"]
-        res = clf.predict(dev.iloc[:, :-1])
-        result = pd.DataFrame({})
-        result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
-        result["actual"] = dev['geotag']
 
-        actual_y = dev["geotag"].map(self.config.MAP)
-        predict_y = res
-        accuracy = metrics.accuracy_score(actual_y, predict_y)
-        precision = metrics.precision_score(actual_y, predict_y, average='macro')
-        recall = metrics.recall_score(actual_y, predict_y, average='macro')
-        print(" accuracy:%s\n precision:%s\n recall:%s\n" % (accuracy, precision, recall))
+        accuracy = []
+        precision = []
+        recall = []
+        r = range(1, 101)
+        for t in r:
+            clf = MultinomialNB(alpha=t / 100)
+            pprint(clf.fit(train.iloc[:, :-1], train_y))
+            dev = features["dev"]
+            res = clf.predict(dev.iloc[:, :-1])
+            result = pd.DataFrame({})
+            result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
+            result["actual"] = dev['geotag']
+            actual_y = dev["geotag"].map(self.config.MAP)
+            predict_y = res
+
+            accuracy.append(metrics.accuracy_score(actual_y, predict_y))
+            precision.append(metrics.precision_score(actual_y, predict_y, average='macro'))
+            recall.append(metrics.recall_score(actual_y, predict_y, average='macro'))
+
+        plt.plot(r, accuracy, 'r--', r, precision, 'bs', r, recall, 'g^')
+        plt.show()
         pass
 
 
@@ -274,12 +321,14 @@ if __name__ == '__main__':
     # file.file_load()
     # file.freq_dist()
     # file.geography_gazetteer()
-    # feature = Features()
+    feature = Features()
     # feature.get_gazetteer_in_tweets()
     # feature.select_user()
     # feature.load_features()
     # feature.calc_gazetteer()
-    predict = Predict()
-    predict.complement_naive_bayes()
+    feature.implement_paper()
+
+    # predict = Predict()
+    # predict.complement_naive_bayes()
     print()
     # print(str(file.dev_set['tweet'][24]))
