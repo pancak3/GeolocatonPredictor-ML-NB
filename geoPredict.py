@@ -20,7 +20,7 @@ class Config:
     TEST_NAME = "test_tweets.txt"
     TRAIN_NAME = "train_tweets.txt"
     SHP_PATH = "shapefiles"
-    FEATURES_NAME = 'features.csv'
+    FEATURES_GAZE_NAME = 'features_gazetteer.csv'
     GAZETTEER_IN_TWEETS_PATH = "gazetteer_in_tweets.txt"
     SHP = ("California", "NewYork", "Georgia")
     SHP_FILENAME = ("tl_2019_06_place", "tl_2019_36_place", "tl_2019_13_place")
@@ -50,12 +50,12 @@ class FileLoader:
         for idx, geotag in enumerate(self.config.SHP):
             f_path = os.path.join(self.config.MY_DATA_PATH, 'gazetteer_' + geotag + '.txt')
             self.gazetteer[geotag] = set(open(f_path).read().split('\n'))
-        self.gazetteer.update({'all': set(())})
-
-        for gaze in self.gazetteer.items():
-            if gaze[0] != 'all':
-                self.gazetteer["all"].update(gaze[1])
-        self.gazetteer['all'].remove('')
+        # self.gazetteer.update({'all': set(())})
+        #
+        # for gaze in self.gazetteer.items():
+        #     if gaze[0] != 'all':
+        #         self.gazetteer["all"].update(gaze[1])
+        # self.gazetteer['all'].remove('')
 
     def file_fixer(self):
         def fix(filename):
@@ -146,7 +146,10 @@ class Features:
     config = Config()
     data = FileLoader()
 
-    features = pd.DataFrame(data={})
+    features = {
+        "train": pd.DataFrame(data={}),
+        "dev": pd.DataFrame(data={}),
+    }
 
     def __init__(self):
         self.data.file_load()
@@ -155,33 +158,66 @@ class Features:
         self.features['user'] = self.data.train_set['user']
 
     def load_features(self):
-        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_NAME)
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_NAME)
         self.features = pd.read_csv(f_path)
         pass
 
     def calc_gazetteer(self):
+        # data = self.data.train_set
+        def run(_self, tmp_data, f_path_, name):
+            for gaze in tqdm.tqdm(_self.data.gazetteer['all'], unit=" gazes"):
+                _self.features[name][gaze] = pd.DataFrame(np.zeros((tmp_data.shape[0], 1))).iloc[:, 0]
+                for idx, tweet in enumerate(tmp_data['tweet']):
+                    gazes = gaze.split()
+                    tmp = set(tweet.split())
+                    for token in gazes:
+                        if token in tmp:
+                            if gaze in tweet:
+                                _self.features[name].loc[idx, gaze] = tweet.count(gaze)
+                                break
 
-        for gaze in tqdm.tqdm(self.data.gazetteer['all'], unit=" gazes"):
-            self.features[gaze] = pd.DataFrame(np.zeros((self.data.train_set.shape[0], 1))).iloc[:, 0]
+            _self.features[name]['geotag'] = tmp_data['geotag']
+            _self.features[name].to_csv(f_path_, index=False)
+            logging.info("[*] Saved %s." % f_path_)
 
-        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
-        f = open(f_path)
+        logging.info("[*] Gathering gazetteer features in train set")
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_NAME)
+        run(self, self.data.train_set, f_path, 'train')
+
+        logging.info("[*] Gathering gazetteer features in dev set")
+        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.FEATURES_GAZE_NAME[:-4] + '_dev.csv')
+        run(self, self.data.dev_set, f_path, 'dev')
         # use O(1) to find first then use O(n)
-        for idx, tweet in enumerate(self.data.train_set['tweet']):
-            self.features.loc[idx, gaze] = int(gaze in tweet)
 
     def get_gazetteer_in_tweets(self):
-        logging.info("[*] Capturing gazetteers ...")
-        gazetteers = set(())
-        f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
-        f = open(f_path, encoding='ISO-8859-1').read()
-        for gaze in tqdm.tqdm(self.data.gazetteer['all'], unit=' gazetteers'):
-            p = re.compile(gaze)
-            if gaze != '' and len(re.findall(p, f)) > 0:
-                gazetteers.add(gaze)
         f_path = os.path.join(self.config.MY_DATA_PATH, self.config.GAZETTEER_IN_TWEETS_PATH)
-        write_file(gazetteers, f_path)
-        print()
+        res = set(())
+        if os.stat(f_path).st_size == 0:
+            logging.info("[*] Capturing gazetteers ...")
+
+            f_path = os.path.join(self.config.MY_DATA_PATH, self.config.TRAIN_NAME)
+            f = open(f_path, encoding='ISO-8859-1').read()
+
+            for gazes in self.data.gazetteer.items():
+                gazetteers = set(())
+                for gaze in tqdm.tqdm(gazes[1], unit=' gazetteers'):
+                    p = re.compile(gaze)
+                    if gaze != '' and len(re.findall(p, f)) > 0:
+                        gazetteers.add(gaze)
+
+                gazetteers = dict.fromkeys(gazetteers)
+                for gaze in gazetteers:
+                    gazetteers[gaze] = len(re.findall(gaze, f))
+                gazetteers = sorted(gazetteers, key=gazetteers.get)
+                res = res | set(gazetteers[-50:])
+        else:
+            f = open(f_path).readlines()
+            for gaze in f:
+                res.add(gaze[:-1])
+        res = sorted(res)
+        self.data.gazetteer['all'] = res
+
+        write_file(res, f_path)
 
 
 def write_file(contents, f_path):
@@ -199,9 +235,9 @@ if __name__ == '__main__':
     # file.file_fixer()
     # file.file_load()
     # file.freq_dist()
-    file.geography_gazetteer()
+    # file.geography_gazetteer()
     feature = Features()
-    # feature.get_gazetteer_in_tweets()
+    feature.get_gazetteer_in_tweets()
     # feature.select_user()
     # feature.load_features()
     feature.calc_gazetteer()
