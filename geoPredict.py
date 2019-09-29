@@ -16,6 +16,8 @@ from sklearn.naive_bayes import ComplementNB
 from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
+from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_val_predict
 
 
 class Config:
@@ -155,11 +157,12 @@ class FileLoader:
 class Features:
     config = Config()
     data = FileLoader()
-
+    best_most = []
     features = {
         "train": pd.DataFrame(data={}),
         "dev": pd.DataFrame(data={}),
     }
+    nb_threshold = 1000
 
     def __init__(self):
         self.data.file_load()
@@ -241,7 +244,7 @@ class Features:
                                       total=data.shape[0]):
                 # character_set = set(row['tweet'])
                 # if '@' in character_set:
-                prep, prep_pp, pp, adj, verb, place_pp, defart_pp = 0, 0, 0, 0, 0, 0, 0
+                prep, prep_pp, pp, adj, verb, place_pp, defart_pp, time_expression, food = 0, 0, 0, 0, 0, 0, 0, 0, 0
                 htah = row['tweet'].count('#')
                 at_user = row['tweet'].count('@USER')
 
@@ -252,7 +255,7 @@ class Features:
                     if token[1] in {'IN', 'TO'}:
                         prep += 1
                         if idx_ < len(tags) - 2:
-                            if tags[idx_ + 1][1] == 'NN':
+                            if 'NN' in tags[idx_ + 1][1]:
                                 prep_pp += 1
                     if 'NN' in token[1]:
                         pp += 1
@@ -292,18 +295,24 @@ class Features:
             precision = []
             recall = []
             f_score = []
-            r = range(1, 2)
 
-            for t in r:
-                clf = ComplementNB(alpha=t / 1)
+            for t in range(1000, 1001):
+                clf = ComplementNB(alpha=1000)
                 # clf = RandomForestClassifier(n_estimators=1000)
-                pprint(clf.fit(train.iloc[:, :-1], train_y))
-                res = clf.predict(dev.iloc[:, :-1])
+                pprint(clf.fit(train.iloc[:, 1:-1], train_y))
+                # cv_results = cross_validate(clf, train.iloc[:, 1:-1], train_y, cv=10)
+                # pprint(cv_results.keys())
+                #
+                # pprint(pd.DataFrame(cv_results))
+
+                # res = clf.predict(dev.iloc[:, 1:-1])
+                res = cross_val_predict(clf, train.iloc[:, 1:-1], train_y, cv=9, n_jobs=-1)
 
                 result = pd.DataFrame({})
                 result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
                 result["actual"] = dev['geotag']
                 actual_y = dev["geotag"].map(self.config.MAP)
+                actual_y = train_y
                 # pprint(result)
                 predict_y = res
 
@@ -314,6 +323,7 @@ class Features:
                 # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (
                 #     accuracy[-1], precision[-1], recall[-1], f_score[-1]))
                 print("accuracy: %f" % accuracy[0])
+
                 scores = pd.DataFrame(data=[precision[0], recall[0], f_score[0]],
                                       index=['precision', 'recall', 'f_score'], columns=self.config.MAP).T
 
@@ -328,48 +338,124 @@ class Features:
             # plt.show()
             # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (accuracy, precision, recall, f_score))
 
-    def best_200(self):
+    def paper_best_200(self):
         train_features, dev_features = pd.read_csv("datasets/train-best200.csv"), pd.read_csv(
             "datasets/dev-best200.csv")
+        my_train, my_dev = pd.read_csv("myData/features_paper.csv"), pd.read_csv(
+            "myData/features_paper_dev.csv")
+
+        train_features = pd.concat(
+            [train_features.iloc[:, 2:-1], my_train.iloc[:, 1:]], axis=1)
+        dev_features = pd.concat([dev_features.iloc[:, 2:-1], my_dev.iloc[:, 1:]],
+                                 axis=1)
+
         train = train_features
-        train_y = train['class'].map(self.config.MAP)
+        train_y = train['geotag'].map(self.config.MAP)
         dev = dev_features
 
         accuracy = []
         precision = []
         recall = []
         f_score = []
-        r = range(1, 2)
 
-        for t in r:
-            clf = ComplementNB(alpha=t / 1)
-            # clf = RandomForestClassifier(n_estimators=1000)
-            pprint(clf.fit(train.iloc[:, 2:-1], train_y))
-            res = clf.predict(dev.iloc[:, 2:-1])
+        # clf = ComplementNB(alpha=self.nb_threshold)
+        clf = RandomForestClassifier(n_estimators=1000)
+        pprint(clf.fit(train.iloc[:, 2:-1], train_y))
+        res = clf.predict(dev.iloc[:, 2:-1])
 
-            result = pd.DataFrame({})
-            result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
-            result["actual"] = dev['class']
-            actual_y = dev["class"].map(self.config.MAP)
-            # pprint(result)
-            predict_y = res
+        result = pd.DataFrame({})
+        result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
+        result["actual"] = dev['geotag']
+        actual_y = dev["geotag"].map(self.config.MAP)
+        # pprint(result)
+        predict_y = res
 
-            accuracy.append(metrics.accuracy_score(actual_y, predict_y))
-            precision.append(metrics.precision_score(actual_y, predict_y, average=None))
-            recall.append(metrics.recall_score(actual_y, predict_y, average=None))
-            f_score.append(metrics.f1_score(actual_y, predict_y, average=None))
-            # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (
-            #     accuracy[-1], precision[-1], recall[-1], f_score[-1]))
-            print("accuracy: %f" % accuracy[0])
-            scores = pd.DataFrame(data=[precision[0], recall[0], f_score[0]],
-                                  index=['precision', 'recall', 'f_score'], columns=self.config.MAP).T
+        accuracy.append(metrics.accuracy_score(actual_y, predict_y))
+        precision.append(metrics.precision_score(actual_y, predict_y, average=None))
+        recall.append(metrics.recall_score(actual_y, predict_y, average=None))
+        f_score.append(metrics.f1_score(actual_y, predict_y, average=None))
+        # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (
+        #     accuracy[-1], precision[-1], recall[-1], f_score[-1]))
+        print("accuracy: %f" % accuracy[0])
+        scores = pd.DataFrame(data=[precision[0], recall[0], f_score[0]],
+                              index=['precision', 'recall', 'f_score'], columns=self.config.MAP).T
 
-            weighted = [metrics.precision_score(actual_y, predict_y, average='weighted'),
-                        metrics.recall_score(actual_y, predict_y, average='weighted'),
-                        metrics.f1_score(actual_y, predict_y, average='weighted')]
-            weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
-            scores = scores.append(weighted, ignore_index=False)
-            pprint(scores)
+        weighted = [metrics.precision_score(actual_y, predict_y, average='weighted'),
+                    metrics.recall_score(actual_y, predict_y, average='weighted'),
+                    metrics.f1_score(actual_y, predict_y, average='weighted')]
+        weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
+        scores = scores.append(weighted, ignore_index=False)
+        pprint(scores)
+
+    def best_200(self):
+        def merge(data):
+            data['class'] = data['class'].map(self.config.MAP)
+            _columns = data.columns
+            users = set(data['user-id'])
+            new_df = pd.DataFrame(columns=data.columns[2:])
+            for user_id in tqdm.tqdm(users, unit=" users"):
+                tmp_line = data.loc[data['user-id'] == user_id]
+                line = tmp_line.iloc[:, 2:-1].sum(axis=0)
+                line['class'] = data.loc[data['user-id'] == user_id]['class'].iloc[0]
+                line_df = pd.DataFrame(data=line, columns=[user_id]).T
+                new_df = new_df.append(line_df)
+
+            return new_df
+
+        train_features, dev_features = pd.read_csv("datasets/train-best200.csv"), pd.read_csv(
+            "datasets/dev-best200.csv")
+        train_features = merge(train_features)
+        dev_features = merge(dev_features)
+
+        train = train_features.iloc[:, :-1]
+        train_y = train_features['class'].to_list()
+        dev = dev_features.iloc[:, :-1]
+        dev_y = dev_features['class'].to_list()
+
+        # clf = ComplementNB(alpha=self.nb_threshold)
+        clf = RandomForestClassifier(n_estimators=100)
+        pprint(clf.fit(train, train_y))
+        res = clf.predict(dev)
+        # res = cross_val_predict(clf, train.iloc[:, 2:-1], train_y, cv=train.shape[1], n_jobs=-1)
+        # res = cross_val_predict(clf, train.iloc[:, :-1], train_y, cv=2, n_jobs=-1)
+
+        result = pd.DataFrame({})
+        result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
+        result["actual"] = dev_y
+        actual_y = dev_y
+        # actual_y = train_y
+        # pprint(result)
+        predict_y = res
+
+        accuracy = []
+        precision = []
+        recall = []
+        f_score = []
+
+        accuracy.append(metrics.accuracy_score(actual_y, predict_y))
+        precision.append(metrics.precision_score(actual_y, predict_y, average=None))
+        recall.append(metrics.recall_score(actual_y, predict_y, average=None))
+        f_score.append(metrics.f1_score(actual_y, predict_y, average=None))
+        # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (
+        #     accuracy[-1], precision[-1], recall[-1], f_score[-1]))
+        print("accuracy: %f" % accuracy[0])
+        scores = pd.DataFrame(data=[precision[0], recall[0], f_score[0]],
+                              index=['precision', 'recall', 'f_score'], columns=self.config.MAP).T
+
+        weighted = [metrics.precision_score(actual_y, predict_y, average='weighted'),
+                    metrics.recall_score(actual_y, predict_y, average='weighted'),
+                    metrics.f1_score(actual_y, predict_y, average='weighted')]
+        weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
+        scores = scores.append(weighted, ignore_index=False)
+        pprint(scores)
+
+    def best_intersection_most(self):
+        best = open('myData/attributes_name_best200.txt').readlines()
+        most = open('myData/attributes_name_most200.txt').readlines()
+        best = set(best)
+        most = set(most)
+        self.best_most = best.intersection(most)
+        print()
 
 
 class Predict:
@@ -425,8 +511,10 @@ if __name__ == '__main__':
     # feature.select_user()
     # feature.load_features()
     # feature.calc_gazetteer()
-    feature.implement_paper()
-    # feature.best_200()
+    # feature.implement_paper()
+    feature.best_200()
+    # feature.best_intersection_most()
+    # feature.paper_best_200()
 
     # predict = Predict()
     # predict.complement_naive_bayes()
