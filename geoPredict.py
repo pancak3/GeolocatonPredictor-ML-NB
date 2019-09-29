@@ -14,6 +14,7 @@ from nltk.tokenize import word_tokenize
 from nltk import pos_tag
 from sklearn.naive_bayes import ComplementNB
 from sklearn import metrics
+from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
 
 
@@ -234,7 +235,7 @@ class Features:
     def implement_paper(self):
         def run(_self, data):
             p_t = re.compile(r'@\w+|RT|[^\w ]')
-            _columns = ["prep", "prep_pp", "pp", "defart_pp", "htah", "adj", "verb"]
+            _columns = ["prep", "prep_pp", "pp", "defart_pp", "htah", "adj", "verb", "at_user"]
             features = []
             for idx, row in tqdm.tqdm(data.iloc[:, 2:].iterrows(), unit=' tweets',
                                       total=data.shape[0]):
@@ -242,6 +243,7 @@ class Features:
                 # if '@' in character_set:
                 prep, prep_pp, pp, adj, verb, place_pp, defart_pp = 0, 0, 0, 0, 0, 0, 0
                 htah = row['tweet'].count('#')
+                at_user = row['tweet'].count('@USER')
 
                 text = re.sub(p_t, '', row['tweet']).replace('_', ' ').lower()
                 tokens = word_tokenize(text)
@@ -261,7 +263,7 @@ class Features:
                         adj += 1
                     if 'VB' in token[1]:
                         verb += 1
-                line = [prep, prep_pp, pp, defart_pp, htah, adj, verb]
+                line = [prep, prep_pp, pp, defart_pp, htah, adj, verb, at_user]
                 features.append(line)
             df_features = pd.DataFrame(data=features, columns=_columns)
             df_features['geotag'] = data['geotag']
@@ -277,13 +279,60 @@ class Features:
             return train_features, dev_features
 
         f_path = "myData/features_paper.csv"
-        if os.stat(f_path).st_size == 0:
+        if not os.path.exists(f_path):
             train_features, dev_features = calc(self)
         else:
             train_features, dev_features = pd.read_csv("myData/features_paper.csv"), pd.read_csv(
                 "myData/features_paper_dev.csv")
+            train = train_features
+            train_y = train['geotag'].map(self.config.MAP)
+            dev = dev_features
+
+            accuracy = []
+            precision = []
+            recall = []
+            f_score = []
+            r = range(1, 2)
+
+            for t in r:
+                clf = ComplementNB(alpha=t / 1)
+                # clf = RandomForestClassifier(n_estimators=1000)
+                pprint(clf.fit(train.iloc[:, :-1], train_y))
+                res = clf.predict(dev.iloc[:, :-1])
+
+                result = pd.DataFrame({})
+                result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
+                result["actual"] = dev['geotag']
+                actual_y = dev["geotag"].map(self.config.MAP)
+                # pprint(result)
+                predict_y = res
+
+                accuracy.append(metrics.accuracy_score(actual_y, predict_y))
+                precision.append(metrics.precision_score(actual_y, predict_y, average=None))
+                recall.append(metrics.recall_score(actual_y, predict_y, average=None))
+                f_score.append(metrics.f1_score(actual_y, predict_y, average=None))
+                # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (
+                #     accuracy[-1], precision[-1], recall[-1], f_score[-1]))
+                print("accuracy: %f" % accuracy[0])
+                scores = pd.DataFrame(data=[precision[0], recall[0], f_score[0]],
+                                      index=['precision', 'recall', 'f_score'], columns=self.config.MAP).T
+
+                weighted = [metrics.precision_score(actual_y, predict_y, average='weighted'),
+                            metrics.recall_score(actual_y, predict_y, average='weighted'),
+                            metrics.f1_score(actual_y, predict_y, average='weighted')]
+                weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
+                scores = scores.append(weighted, ignore_index=False)
+                pprint(scores)
+
+            # plt.plot(r, accuracy, '_', r, precision, '_', r, recall, '_', r, f_score, '_')
+            # plt.show()
+            # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (accuracy, precision, recall, f_score))
+
+    def best_200(self):
+        train_features, dev_features = pd.read_csv("datasets/train-best200.csv"), pd.read_csv(
+            "datasets/dev-best200.csv")
         train = train_features
-        train_y = train['geotag'].map(self.config.MAP)
+        train_y = train['class'].map(self.config.MAP)
         dev = dev_features
 
         accuracy = []
@@ -294,25 +343,33 @@ class Features:
 
         for t in r:
             clf = ComplementNB(alpha=t / 1)
-            pprint(clf.fit(train.iloc[:, :-1], train_y))
-            res = clf.predict(dev.iloc[:, :-1])
+            # clf = RandomForestClassifier(n_estimators=1000)
+            pprint(clf.fit(train.iloc[:, 2:-1], train_y))
+            res = clf.predict(dev.iloc[:, 2:-1])
 
             result = pd.DataFrame({})
             result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
-            result["actual"] = dev['geotag']
-            actual_y = dev["geotag"].map(self.config.MAP)
-            pprint(result)
+            result["actual"] = dev['class']
+            actual_y = dev["class"].map(self.config.MAP)
+            # pprint(result)
             predict_y = res
 
             accuracy.append(metrics.accuracy_score(actual_y, predict_y))
-            precision.append(metrics.precision_score(actual_y, predict_y, average='weighted'))
-            recall.append(metrics.recall_score(actual_y, predict_y, average='weighted'))
-            f_score.append(metrics.f1_score(actual_y, predict_y, average='weighted'))
-            print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (accuracy[-1], precision[-1], recall[-1], f_score[-1]))
+            precision.append(metrics.precision_score(actual_y, predict_y, average=None))
+            recall.append(metrics.recall_score(actual_y, predict_y, average=None))
+            f_score.append(metrics.f1_score(actual_y, predict_y, average=None))
+            # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (
+            #     accuracy[-1], precision[-1], recall[-1], f_score[-1]))
+            print("accuracy: %f" % accuracy[0])
+            scores = pd.DataFrame(data=[precision[0], recall[0], f_score[0]],
+                                  index=['precision', 'recall', 'f_score'], columns=self.config.MAP).T
 
-        # plt.plot(r, accuracy, '_', r, precision, '_', r, recall, '_', r, f_score, '_')
-        # plt.show()
-        # print(" accuracy: %f\n precision: %f\n recall: %f\n f_score: %f" % (accuracy, precision, recall, f_score))
+            weighted = [metrics.precision_score(actual_y, predict_y, average='weighted'),
+                        metrics.recall_score(actual_y, predict_y, average='weighted'),
+                        metrics.f1_score(actual_y, predict_y, average='weighted')]
+            weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
+            scores = scores.append(weighted, ignore_index=False)
+            pprint(scores)
 
 
 class Predict:
@@ -369,6 +426,7 @@ if __name__ == '__main__':
     # feature.load_features()
     # feature.calc_gazetteer()
     feature.implement_paper()
+    # feature.best_200()
 
     # predict = Predict()
     # predict.complement_naive_bayes()
