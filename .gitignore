@@ -2,3 +2,7 @@
 myData/*.txt
 *.csv
 models/
+__pycache__
+*.bak
+log
+plot_document_classification_20newsgroups.py
