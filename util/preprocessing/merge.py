@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from pandas import DataFrame
 from tqdm import tqdm
+from joblib import dump
 
 REMAP = {0: "California", 1: "NewYork", 2: "Georgia"}
 MAP = {"California": 0, "NewYork": 1, "Georgia": 2}
@@ -15,8 +16,10 @@ def merge(f_path):
     _columns = data.columns
     users = set(data['user-id'])
     new_df = DataFrame(columns=data.columns[2:])
+    id_map = []
     for user_id in tqdm(users, unit=" users"):
         tmp_line = data.loc[data['user-id'] == user_id]
+        id_map.append(tmp_line.index)
         line = tmp_line.iloc[:, 2:-1].sum(axis=0)
         line['class'] = data.loc[data['user-id'] == user_id]['class'].iloc[0]
         line_df = DataFrame(data=line, columns=[user_id]).T
@@ -24,7 +27,9 @@ def merge(f_path):
     filename = os.path.basename(f_path)
     f_path = os.path.join("myData", "merged_" + filename)
     new_df.to_csv(f_path)
-    logging.info("[*] Saved %s " % f_path)
+    map_path = os.path.join("myData", "merged_" + filename + ".map")
+    dump(id_map, map_path)
+    logging.info("[*] Saved %s; %s " % (f_path, map_path))
     return f_path
 
 

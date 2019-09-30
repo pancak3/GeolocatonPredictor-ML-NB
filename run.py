@@ -14,6 +14,8 @@ def merge_files():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    f_path = train.random_forest("myData/merged_train-best200.csv", "myData/merged_dev-best200.csv")
-    # predict.random_forest("/home/q/gits/UoM_MasterOfComputerScience/ktp2/models/0.7418_2019-09-30_16:21",
-    #                       "myData/merged_dev-best200.csv")
+    # merge_files()
+    f_path = train.random_forest("myData/merged_train-best200.csv", "myData/merged_dev-best200.csv",
+                                 "datasets/dev-best200.csv")
+    # predict.random_forest(f_path,
+    #                       "myData/merged_dev-best200.csv", "datasets/dev-best200.csv")

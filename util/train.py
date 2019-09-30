@@ -1,14 +1,16 @@
 from .file_manager import *
 import logging
 import pandas as pd
+import os
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 from .maps.maps import *
 from .MyMertrics import *
+from joblib import load
 
 
-def random_forest(train_path, test_path):
+def random_forest(train_path, test_path, test_original_path):
     train_features = pd.read_csv(train_path)
     dev_features = pd.read_csv(test_path)
 
@@ -22,7 +24,7 @@ def random_forest(train_path, test_path):
 
     res = grid.best_estimator_.predict(dev_features.iloc[:, 1:-1])
 
-    accuracy, scores = my_score(dev_features['class'].to_list(), res)
+    accuracy, scores = my_score(res, test_original_path)
 
     f_path = save_model(grid, accuracy, scores)
     return f_path

@@ -17,3 +17,6 @@ def load_model(f_path):
     model = load(f_path)
     logging.info("\n{} \n[*] Loaded {}".format(pformat(vars(model)), f_path))
     return model
+
+
+
