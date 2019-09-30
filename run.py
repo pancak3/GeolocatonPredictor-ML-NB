@@ -1,4 +1,5 @@
 import logging
+import time
 from util import train
 from util import predict
 from util.preprocessing import merge
@@ -21,6 +22,7 @@ def merge_files():
 
 
 if __name__ == '__main__':
+    start = time.time()
     logging.basicConfig(level=logging.INFO)
     # merge_files()
 
@@ -28,3 +30,4 @@ if __name__ == '__main__':
     #                              "datasets/dev-best200.csv")
     f_path = train.random_forest("myData/merged_train-best200.csv", "myData/merged_dev-best200.csv",
                                  "datasets/dev-best200.csv")
+    print(time.time()-start)

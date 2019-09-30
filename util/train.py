@@ -20,9 +20,9 @@ def random_forest(train_path, test_path, test_original_path):
 
     clf = RandomForestClassifier()
     param_dist = {
-        'n_estimators': range(80, 120, 2),
-        'max_features': [None]
-        # 'bootstrap': [False],
+        'n_estimators': range(8, 512, 2),
+        'max_features': [None, "sqrt", "log2"],
+        'bootstrap': [False, True]
 
     }
 
