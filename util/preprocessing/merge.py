@@ -27,7 +27,7 @@ def merge_similar_feature(data, features):
     return data
 
 
-def merge(f_path):
+def merge(f_path, my_path):
     logging.info("[*] Merging %s " % f_path)
     data = pd.read_csv(f_path)
     features = feature_filter(data.columns[2:-1])
@@ -43,6 +43,9 @@ def merge(f_path):
     for f in features:
         data = merge_similar_feature(data, f)
 
+    my_data = pd.read_csv(my_path)
+    for column in my_data.columns[1:]:
+        data.insert(loc=2, column=column, value=my_data[column])
     data['class'] = data['class'].map(MAP)
     _columns = data.columns
     users = set(data['user-id'])
@@ -51,8 +54,8 @@ def merge(f_path):
     for user_id in tqdm(users, unit=" users"):
         tmp_line = data.loc[data['user-id'] == user_id]
         id_map.append(tmp_line.index)
-        # line = tmp_line.iloc[:, 2:-1].sum(axis=0)/len(tmp_line.index)
-        line = tmp_line.iloc[:, 2:-1].sum(axis=0)
+        line = tmp_line.iloc[:, 2:-1].sum(axis=0)/len(tmp_line.index)
+        # line = tmp_line.iloc[:, 2:-1].sum(axis=0)
         line['class'] = data.loc[data['user-id'] == user_id]['class'].iloc[0]
         line_df = DataFrame(data=line, columns=[user_id]).T
         new_df = new_df.append(line_df)
@@ -61,22 +64,26 @@ def merge(f_path):
     new_df.to_csv(f_path)
     map_path = os.path.join("myData", "merged_" + filename + ".map")
     dump(id_map, map_path)
-    logging.info("[*] Saved %s; %s " % (f_path, map_path))
+    logging.info("[*] Saved %s; %s \n" % (f_path, map_path))
     return f_path
 
 
 def word_type(data_path):
+    logging.info("[*] Counting word type %s" % data_path)
     data = pd.read_csv(data_path, encoding="ISO-8859-1")
     p_t = re.compile(r'@\w+|RT|[^\w ]')
     _columns = ["prep", "pp", "topic", "adj_adv", "verb", "at_user"]
+    # _columns = ["prep", "pp", "topic", "adj_adv", "verb", "at_user"]
     features = []
     for idx, row in tqdm(data.iloc[:, 2:].iterrows(), unit=' tweets',
                          total=data.shape[0]):
 
         prep, pp, topic, adj_adv, verb, at_user = 0, 0, 0, 0, 0, 0
 
-        topic = row['tweet'].count('#')
-        at_user = row['tweet'].count('@USER')
+        # topic = int(row['tweet'].count('#') > 0)
+        # at_user = int(row['tweet'].count('@USER') > 0)
+        topic = int(row['tweet'].count('#') > 0)
+        at_user = int(row['tweet'].count('@USER') > 0)
 
         text = re.sub(p_t, '', row['tweet']).replace('_', ' ').lower()
         tokens = word_tokenize(text)
@@ -91,7 +98,10 @@ def word_type(data_path):
             if 'VB' in token[1]:
                 verb += 1
         line = [prep, pp, topic, adj_adv, verb, at_user]
+        # line = [prep, topic, adj_adv, verb, at_user]
         features.append(line)
     df_features = pd.DataFrame(data=features, columns=_columns)
     filename = os.path.basename(data_path)[:-4]
-    df_features.to_csv("myData/my_features_{}.csv".format(filename))
+    wt_path = "myData/my_features_{}.csv".format(filename)
+    df_features.to_csv(wt_path)
+    logging.info("[*] Saved word type %s \n" % wt_path)

@@ -20,10 +20,14 @@ def random_forest(train_path, test_path, test_original_path):
 
     clf = RandomForestClassifier()
     param_dist = {
-        'n_estimators': range(100, 102, 2)
+        'n_estimators': range(80, 120, 2),
+        'max_features': [None]
+        # 'bootstrap': [False],
+
     }
 
-    grid = GridSearchCV(clf, param_dist, cv=train_features.shape[1], scoring='accuracy', n_jobs=-1, verbose=2)
+    # grid = GridSearchCV(clf, param_dist, cv=train_features.shape[1], scoring='accuracy', n_jobs=-1, verbose=2)
+    grid = GridSearchCV(clf, param_dist, cv=20, scoring='accuracy', n_jobs=-1, verbose=2)
     grid.fit(train_features.iloc[:, 1:-1], train_features['class'].to_list())
 
     res = grid.best_estimator_.predict(dev_features.iloc[:, 1:-1])
@@ -40,7 +44,8 @@ def complement_nb(train_path, test_path, test_original_path):
 
     clf = ComplementNB()
     param_dist = {
-        'alpha': [1.0e-10],
+        # 'alpha': [1.0e-10],
+        'alpha': np.linspace(1.0e-10, 1.0e-10 * 100, 100),
         'norm': [False]
     }
 
