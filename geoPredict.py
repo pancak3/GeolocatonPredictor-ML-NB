@@ -17,7 +17,9 @@ from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import train_test_split
 
 
 class Config:
@@ -402,28 +404,42 @@ class Features:
 
             return new_df
 
-        train_features, dev_features = pd.read_csv("datasets/train-best200.csv"), pd.read_csv(
-            "datasets/dev-best200.csv")
-        train_features = merge(train_features)
-        dev_features = merge(dev_features)
+        f_path = "myData/merge_train.csv"
+        if not os.path.exists(f_path):
+            train_features, dev_features = pd.read_csv("datasets/train-best200.csv"), pd.read_csv(
+                "datasets/dev-best200.csv")
+            train_features = merge(train_features)
+            f_path = "myData/merge_train.csv"
+            train_features.to_csv(f_path)
+            # when try test, dev should be merged with train
+            dev_features = merge(dev_features)
+            f_path = "myData/merge_dev.csv"
+            dev_features.to_csv(f_path)
 
-        train = train_features.iloc[:, :-1]
-        train_y = train_features['class'].to_list()
-        dev = dev_features.iloc[:, :-1]
-        dev_y = dev_features['class'].to_list()
+            train = train_features.iloc[:, :-1]
+            train_y = train_features['class'].to_list()
+            dev = dev_features.iloc[:, :-1]
+            dev_y = dev_features['class'].to_list()
+        else:
+            f_path = "myData/merge_train.csv"
+            train_features = pd.read_csv(f_path)
+            f_path = "myData/merge_dev.csv"
+            dev_features = pd.read_csv(f_path)
 
-        # clf = ComplementNB(alpha=self.nb_threshold)
-        clf = RandomForestClassifier(n_estimators=100)
-        pprint(clf.fit(train, train_y))
+            train = train_features.iloc[:, 1:-1]
+            train_y = train_features['class'].to_list()
+            dev = dev_features.iloc[:, 1:-1]
+            dev_y = dev_features['class'].to_list()
+
+        clf = RandomForestClassifier(n_estimators=120)
+        X_train, X_test, y_train, y_test = train_test_split(train, train_y, test_size=0.4, random_state=0)
+        clf.fit(X_train, y_train)
         res = clf.predict(dev)
-        # res = cross_val_predict(clf, train.iloc[:, 2:-1], train_y, cv=train.shape[1], n_jobs=-1)
-        # res = cross_val_predict(clf, train.iloc[:, :-1], train_y, cv=2, n_jobs=-1)
-
         result = pd.DataFrame({})
         result["prediction"] = pd.DataFrame(res).iloc[:, 0].map(self.config.REMAP)
         result["actual"] = dev_y
+        # actual_y = dev_y
         actual_y = dev_y
-        # actual_y = train_y
         # pprint(result)
         predict_y = res
 
