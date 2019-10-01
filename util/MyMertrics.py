@@ -10,6 +10,7 @@ from joblib import load
 def save_res(res, test_original_path, acc):
     filename = 'res_' + os.path.basename(test_original_path)
     df = pd.DataFrame(res)['class'].map(REMAP)
+    df = pd.DataFrame(df, columns=["class"])
     res_path = "results/{0}_{1:.4f}_{2}".format(filename, acc, f"{datetime.datetime.now():%Y-%m-%d_%H:%M}")
     df.to_csv(res_path)
     print("[*] Saved %s" % res_path)
