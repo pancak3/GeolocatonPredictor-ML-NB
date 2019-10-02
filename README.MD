@@ -27,6 +27,10 @@ In `util/train.py`,
 pip install -r requirements.txt
 ```
 ## Usage
+
+### Note
+   The code will remove the old models and results every time running.<br >
+    <strong>MAKE SURE</strong> you have saved your satisfying models.
 ### Train
 ```python
 python run.py -t datasets/train-best200.csv datasets/dev-best200.csv 7
