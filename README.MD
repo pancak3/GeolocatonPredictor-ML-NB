@@ -95,8 +95,8 @@ python run.py -h
 
 ## Used libraries
 + [sklearn](https://scikit-learn.org/stable/index.html) for easily using Complement Naive Bayes, some feature selectors and other learning tools.
-+ [pandas](https://github.com/pandas-dev/pandas.git) for easily handling data
-+ [tqdm](https://github.com/tqdm/tqdm.git) for showing the process of loop
++ [pandas](https://github.com/pandas-dev/pandas.git) for easily handling data.
++ [tqdm](https://github.com/tqdm/tqdm.git) for showing the process of loop.
 + <strike>[nltk](https://github.com/tqdm/tqdm.git) for capturing word types on the purpose of feature filtering</strike>
 ## License
 See [LICENSE](LICENSE) file.
