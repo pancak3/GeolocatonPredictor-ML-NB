@@ -51,6 +51,14 @@ weighted     0.827448  0.812596  0.814974
 python run.py -p models/ datasets/dev-best200.csv 
 
 ```
+the output would be like:
+```
+...
+INFO:root:[*] Saved results/final_results.csv
+INFO:root:[*] Time costs in seconds:
+          Predict
+Time_cost  11.98s
+```
 ### Score
 ```python
 python run.py -s results/final_results.csv  datasets/dev-best200.csv
@@ -65,7 +73,7 @@ Georgia      0.909456  0.858296  0.883136
 weighted     0.833854  0.822470  0.824577
 INFO:root:[*] Time costs in seconds:
               Score
-Time_cost  1.478792
+Time_cost  1.48
 
 ```
 ### Train&Predict&Score
