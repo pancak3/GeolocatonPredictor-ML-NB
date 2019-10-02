@@ -1,6 +1,8 @@
 import logging
 import datetime
-from pprint import pprint, pformat
+import os
+import shutil
+from pprint import pformat
 from joblib import dump, load
 from .MyClasses import Model
 
@@ -19,4 +21,6 @@ def load_model(f_path):
     return model
 
 
-
+def remake_dir(dir_name):
+    shutil.rmtree(dir_name)
+    os.mkdir(dir_name, 0o755)

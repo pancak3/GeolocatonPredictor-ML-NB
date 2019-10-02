@@ -39,6 +39,7 @@ def merge(f_path):
     :param f_path: file path
     :return: results path
     """
+
     logging.info("[*] Merging %s " % f_path)
     data = pd.read_csv(f_path)
     features = feature_filter(data.columns[2:-1])
@@ -194,26 +195,34 @@ def result_combination(is_train=True):
             res = pd.read_csv("results/" + sub_dir + "/" + filename)["class"]
             results.append(pd.DataFrame(res))
         break
-    logging.info("[*] Combining {} results and capturing the majority...".format(len(filenames)))
-    concat_res = pd.concat(results, axis=1)
-    final_res = []
-    for i, row in tqdm(concat_res.iterrows(), unit=" rows", total=concat_res.shape[0]):
-        final_res.append(row.map(MAP).mode()[0])
-    dump(final_res, "myData/final.res")
+    if len(filenames) > 1:
+        logging.info("[*] Combining {} results and capturing the majority...".format(len(filenames)))
+        concat_res = pd.concat(results, axis=1)
+        final_res = []
+        for i, row in tqdm(concat_res.iterrows(), unit=" rows", total=concat_res.shape[0]):
+            final_res.append(row.map(MAP).mode()[0])
+    else:
+        final_res = results[0]
+
     predict_y = final_res
-    actual_y = pd.read_csv("datasets/dev-best200.csv")['class'].map(MAP).to_list()
-    accuracy = metrics.accuracy_score(actual_y, predict_y)
-    precision = metrics.precision_score(actual_y, predict_y, average=None)
-    recall = metrics.recall_score(actual_y, predict_y, average=None)
-    f_score = metrics.f1_score(actual_y, predict_y, average=None)
 
-    scores = pd.DataFrame(data=[precision, recall, f_score],
-                          index=['precision', 'recall', 'f_score'], columns=MAP).T
-    weighted = [metrics.precision_score(actual_y, predict_y, average='weighted'),
-                metrics.recall_score(actual_y, predict_y, average='weighted'),
-                metrics.f1_score(actual_y, predict_y, average='weighted')]
-    weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
-    scores = scores.append(weighted, ignore_index=False)
+    if is_train:
+        predict_y = predict_y["class"].map(MAP).tolist()
+        actual_y = pd.read_csv("datasets/dev-best200.csv")['class'].map(MAP).to_list()
+        accuracy = metrics.accuracy_score(actual_y, predict_y)
+        precision = metrics.precision_score(actual_y, predict_y, average=None)
+        recall = metrics.recall_score(actual_y, predict_y, average=None)
+        f_score = metrics.f1_score(actual_y, predict_y, average=None)
 
-    print("[*] Accuracy: %s" % accuracy)
-    pprint(scores)
+        scores = pd.DataFrame(data=[precision, recall, f_score],
+                              index=['precision', 'recall', 'f_score'], columns=MAP).T
+        weighted = [metrics.precision_score(actual_y, predict_y, average='weighted'),
+                    metrics.recall_score(actual_y, predict_y, average='weighted'),
+                    metrics.f1_score(actual_y, predict_y, average='weighted')]
+        weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
+        scores = scores.append(weighted, ignore_index=False)
+
+        print("[*] Accuracy: %s" % accuracy)
+        pprint(scores)
+    else:
+        final_res.to_csv("results/final_results.csv")

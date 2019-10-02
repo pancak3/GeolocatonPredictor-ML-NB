@@ -65,7 +65,7 @@ def complement_nb(train_path, test_path, test_original_path):
     res = grid.best_estimator_.predict(dev_features.iloc[:, 1:-1])
     accuracy, scores = my_score(res, test_original_path, True)
     f_path = save_model(grid, accuracy, scores)
-    pprint(train_features.shape)
+    # pprint(train_features.shape)
     return f_path
 
 
