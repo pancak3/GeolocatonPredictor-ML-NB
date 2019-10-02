@@ -7,16 +7,28 @@ from sklearn import metrics
 from joblib import load
 
 
-def save_res(res, test_original_path, acc):
+def save_res(res, test_original_path, acc, is_train):
     filename = 'res_' + os.path.basename(test_original_path)
     df = pd.DataFrame(res)['class'].map(REMAP)
     df = pd.DataFrame(df, columns=["class"])
-    res_path = "results/{0}_{1:.4f}_{2}".format(filename, acc, f"{datetime.datetime.now():%Y-%m-%d_%H:%M}")
+    if is_train:
+        sub_dir = "train"
+    else:
+        sub_dir = "predict"
+
+    res_path = "results/{3}/{0}_{1:.4f}_{2}".format(filename, acc, f"{datetime.datetime.now():%Y-%m-%d_%H:%M}", sub_dir)
     df.to_csv(res_path)
     print("[*] Saved %s" % res_path)
 
 
-def my_score(predict_y, test_original_path):
+def my_score(predict_y, test_original_path, is_train=True):
+    """
+
+    :param predict_y: predict labels list
+    :param test_original_path: test original path
+    :param is_train: called by train
+    :return: (accuracy,scores)
+    """
     filename = os.path.basename(test_original_path)
     map_path = os.path.join("myData", 'merged_' + filename + ".map")
     id_map = load(map_path)
@@ -38,5 +50,5 @@ def my_score(predict_y, test_original_path):
                 metrics.f1_score(actual_y, predict_y, average='weighted')]
     weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
     scores = scores.append(weighted, ignore_index=False)
-    save_res(predict_y, test_original_path, accuracy)
+    save_res(predict_y, test_original_path, accuracy, is_train)
     return accuracy, scores

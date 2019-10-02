@@ -20,7 +20,7 @@ def feature_filter(features_list):
     res = []
 
     for feature in features_list:
-        if len(feature) < 3:
+        if len(feature) < 2:
             res.append(feature)
     return res
 
@@ -33,7 +33,12 @@ def merge_similar_feature(data, features):
     return data
 
 
-def merge(f_path, my_path):
+def merge(f_path):
+    """
+
+    :param f_path: file path
+    :return: results path
+    """
     logging.info("[*] Merging %s " % f_path)
     data = pd.read_csv(f_path)
     features = feature_filter(data.columns[2:-1])
@@ -51,13 +56,29 @@ def merge(f_path, my_path):
         if 'jus' in feature:
             features[3].append(feature)
     features.append(["huh", "hun"])
+    features.append(["taco", "tacos"])
     features.append(["icheated", "icheatedbecause"])
+    features.append(["lt", "ltlt", "ltreply"])
+    features.append(["mad", "madd"])
+
+    # features.append(["huh", "hun"])
+    # features.append(["flex", "flexin"])
+    # features.append(["dam", "damn", 'da'])
+    # features.append(["kno", "know", 'knw'])
+    # features.append(["dat", "dats"])
+    # # features.append(["gon", "gone"])
+    # # features.append(["iono", "ion"])
+    # features.append(["factaboutme", "factsaboutme"])
+    # features.append(["taco", "tacos"])
+    # features.append(["icheated", "icheatedbecause"])
+    # features.append(["lt", "ltlt", "ltreply"])
+    # features.append(["mad", "madd"])
+    # features.append(["bt", "btwn"])
+    # # features.append(["loll", "lolss", "lolsz"])
+    # # features.append(["cali", "california"])
+
     for f in features:
         data = merge_similar_feature(data, f)
-
-    # my_data = pd.read_csv(my_path)
-    # for column in my_data.columns[1:]:
-    #     data.insert(loc=2, column=column, value=my_data[column])
 
     data['class'] = data['class'].map(MAP)
     _columns = data.columns
@@ -75,8 +96,26 @@ def merge(f_path, my_path):
     filename = os.path.basename(f_path)
     # features selector
     if "train" in filename:
+        # classes = [0, 1, 2]
+        # features_percentage = pd.DataFrame(columns=classes, index=new_df.columns[:-1])
+        # for cls in classes:
+        #     data_class = new_df[new_df["class"] == cls].iloc[:, :-1].sum(axis=0)
+        #     data_class_df = pd.DataFrame(data_class, columns=[cls])
+        #     features_percentage[cls] = data_class_df
+        #
+        # # features_sum = features_percentage.sum(axis=1)
+        # features_std = features_percentage.std(axis=1)
+        # features_mean = features_percentage.mean(axis=1)
+        # keep_features_list = []
+        # for items in features_std.iteritems():
+        #     if items[1] < features_mean[items[0]]:
+        #         keep_features_list.append(items[0])
+        #
+        # new_df = new_df.drop(columns=keep_features_list)
+
         # selector = SelectKBest(f_classif, k=200)
         # selector = VarianceThreshold(threshold=0.01)
+        # selector = SelectFpr(f_classif, alpha=1.0e-3)
         selector = SelectFpr(chi2, alpha=1.0e-3)
         selector.fit_transform(new_df.iloc[:, :-1], new_df["class"].to_list())
         features_map = selector.get_support(indices=True)
@@ -95,6 +134,11 @@ def merge(f_path, my_path):
 
 
 def word_type(data_path):
+    """
+
+    :param data_path: data path
+    :return: None
+    """
     logging.info("[*] Counting word type %s" % data_path)
     data = pd.read_csv(data_path, encoding="ISO-8859-1")
     p_t = re.compile(r'@\w+|RT|[^\w ]')
@@ -133,19 +177,30 @@ def word_type(data_path):
     logging.info("[*] Saved word type %s \n" % wt_path)
 
 
-def result_combination():
+def result_combination(is_train=True):
+    """
+
+    :param is_train: is train default True
+    :return: None
+    """
+    if is_train:
+        sub_dir = "train"
+    else:
+        sub_dir = "predict"
+
     results = []
-    for (t, t, filenames) in os.walk("results"):
+    for (t, t, filenames) in os.walk("results/" + sub_dir):
         for filename in filenames:
-            res = pd.read_csv("results/" + filename)["class"]
+            res = pd.read_csv("results/" + sub_dir + "/" + filename)["class"]
             results.append(pd.DataFrame(res))
         break
+    logging.info("[*] Combining {} results and capturing the majority...".format(len(filenames)))
     concat_res = pd.concat(results, axis=1)
     final_res = []
     for i, row in tqdm(concat_res.iterrows(), unit=" rows", total=concat_res.shape[0]):
-        final_res.append(row.mode()[0])
+        final_res.append(row.map(MAP).mode()[0])
     dump(final_res, "myData/final.res")
-    predict_y = pd.DataFrame(final_res, columns=["class"])["class"].map(MAP).to_list()
+    predict_y = final_res
     actual_y = pd.read_csv("datasets/dev-best200.csv")['class'].map(MAP).to_list()
     accuracy = metrics.accuracy_score(actual_y, predict_y)
     precision = metrics.precision_score(actual_y, predict_y, average=None)
@@ -160,5 +215,5 @@ def result_combination():
     weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
     scores = scores.append(weighted, ignore_index=False)
 
-    print(accuracy)
+    print("[*] Accuracy: %s" % accuracy)
     pprint(scores)
