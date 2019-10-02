@@ -1,10 +1,13 @@
 ## Geotag Predictor
 
 This is the code for predicting geotag of tweets.
+
+### Dataset
+See [Eisenstein, Jacob, et al.](http://www.cs.cmu.edu/~nasmith/papers/eisenstein+oconnor+smith+xing.emnlp10.pdf)
+  Although the single file size of datasets is greater than 50.00 MB (See, [http://git.io/iEPt8g ](http://git.io/iEPt8g )), they were added in datasets for convenience.
+
 ### Requirements
 + python3+
-+ dataset, see [Eisenstein, Jacob, et al.](http://www.cs.cmu.edu/~nasmith/papers/eisenstein+oconnor+smith+xing.emnlp10.pdf)
-  Although the single file size of datasets is greater than 50.00 MB (See, [http://git.io/iEPt8g ](http://git.io/iEPt8g )), they were added in datasets for convenience.
 
 #### Installation
 ```pip
@@ -39,13 +42,6 @@ python run.py -p models/ datasets/dev-best200.csv
 ```python
 python run.py -s results/final_results.csv  datasets/dev-best200.csv
 ```
-#### Train&Predict&Score
-```python
-python run.py \
-    -t datasets/train-best200.csv datasets/dev-best200.csv \
-    -p models/ datasets/dev-best200.csv \
-    -s results/final_results.csv  datasets/dev-best200.csv 
-```
 the output would be like:
 ```
 [*] Accuracy: 0.8224697308099213
@@ -59,6 +55,14 @@ INFO:root:[*] Time costs in seconds:
 Time_cost  1.478792
 
 ```
+#### Train&Predict&Score
+```python
+python run.py \
+    -t datasets/train-best200.csv datasets/dev-best200.csv \
+    -p models/ datasets/dev-best200.csv \
+    -s results/final_results.csv  datasets/dev-best200.csv 
+```
+
 #### Others
 ```python
 python run.py -h
@@ -66,6 +70,7 @@ python run.py -h
 
 ### Used library
 + [sklearn](https://scikit-learn.org/stable/index.html)
++ [pandas](https://github.com/pandas-dev/pandas.git)
 + [tqdm](https://github.com/tqdm/tqdm.git)
 ### License
 See [LICENSE](LICENSE) file.

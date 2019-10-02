@@ -5,7 +5,6 @@ import shutil
 from pprint import pformat
 from joblib import dump, load
 from .MyClasses import Model
-from util.file_manager import remake_dir
 
 
 def save_model(grid, test_acc, scores):

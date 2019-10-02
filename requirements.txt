@@ -1,7 +1,4 @@
 request
 pandas
 tqdm
-nltk
-PyShp
 sklearn
-textblob
