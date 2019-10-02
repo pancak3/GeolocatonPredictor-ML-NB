@@ -2,3 +2,4 @@ request
 pandas
 tqdm
 sklearn
+nltk
