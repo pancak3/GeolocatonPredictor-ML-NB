@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ## Usage
 ### Train
 ```python
-python run.py -t datasets/train-best200.csv datasets/dev-best200.csv
+python run.py -t datasets/train-best200.csv datasets/dev-best200.csv 7
 
 ```
 the output would be like:
@@ -71,7 +71,7 @@ Time_cost  1.478792
 ### Train&Predict&Score
 ```python
 python run.py \
-    -t datasets/train-best200.csv datasets/dev-best200.csv \
+    -t datasets/train-best200.csv datasets/dev-best200.csv 7 \
     -p models/ datasets/dev-best200.csv \
     -s results/final_results.csv  datasets/dev-best200.csv 
 ```

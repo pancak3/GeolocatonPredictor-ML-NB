@@ -10,11 +10,12 @@ from util.MyMertrics import get_scores
 from pprint import pprint
 
 
-def run_train(train_path, evaluate_path):
+def run_train(train_path, evaluate_path, models_num):
     """
 
     :param train_path: train set path
     :param evaluate_path: evaluation set path
+    :param models_num: models num for results voting
     :return:
     """
     remake_dir("models/")
@@ -31,7 +32,7 @@ def run_train(train_path, evaluate_path):
     # f_path = train.random_forest("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
     #                              evaluate_path)
     logging.info("[*] Training on {}, evaluating on {}".format(train_path, evaluate_path))
-    for i in range(1):
+    for i in range(models_num):
         train.complement_nb("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
                             evaluate_path)
     merge.result_combination(is_train=True)
@@ -55,7 +56,8 @@ def run_predict(models_path, test_path):
 def arg_parse():
     parser = argparse.ArgumentParser(
         description='This script is used for predicting geotag of tweets based on Complement Naive Bayes.')
-    parser.add_argument('-t', '--train', type=str, nargs=2, metavar=('train_set_path', 'evaluate_set_path'),
+    parser.add_argument('-t', '--train', type=str, nargs=3,
+                        metavar=('train_set_path', 'evaluate_set_path', 'models_num'),
                         help='python3 run.py -t ${train_set_path} ${evaluate_set_path}')
 
     parser.add_argument('-p', '--predict', type=str, nargs=2, metavar=('models_path', 'test_set_path'),
@@ -69,7 +71,7 @@ def arg_parse():
     is_arg_empty = True
     if args.train is not None:
         time_cost.update({"Train": time.time()})
-        run_train(args.train[0], args.train[1])
+        run_train(args.train[0], args.train[1], args.train[2])
         time_cost["Train"] = time.time() - time_cost["Train"]
         is_arg_empty = False
     if args.predict is not None:
