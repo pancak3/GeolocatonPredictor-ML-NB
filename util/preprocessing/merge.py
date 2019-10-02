@@ -13,7 +13,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2, f_classif, mutual_info_classif, SelectFpr
 from sklearn.feature_selection import VarianceThreshold
 from ..MyMertrics import *
-from pprint import pprint
+from pprint import pprint, pformat
 
 
 def feature_filter(features_list):
@@ -195,7 +195,7 @@ def result_combination(is_train=True):
             res = pd.read_csv("results/" + sub_dir + "/" + filename)["class"]
             results.append(pd.DataFrame(res))
         break
-    if len(filenames) > 1:
+    if len(filenames) > 2:
         logging.info("[*] Combining {} results and capturing the majority...".format(len(filenames)))
         concat_res = pd.concat(results, axis=1)
         final_res = []
@@ -222,7 +222,10 @@ def result_combination(is_train=True):
         weighted = pd.DataFrame(data=weighted, index=['precision', 'recall', 'f_score'], columns=['weighted']).T
         scores = scores.append(weighted, ignore_index=False)
 
-        print("[*] Accuracy: %s" % accuracy)
-        pprint(scores)
+        logging.info("[*] Accuracy: %s" % accuracy)
+        logging.info(pformat(scores))
     else:
+
         final_res.to_csv("results/final_results.csv")
+        print("\n")
+        logging.info("[*] Saved results/final_results.csv")

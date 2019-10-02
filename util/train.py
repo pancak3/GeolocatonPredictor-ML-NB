@@ -1,16 +1,7 @@
-import sys
 from .file_manager import *
-import logging
-import pandas as pd
-import os
-import numpy as np
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import ExtraTreeClassifier
-from sklearn import metrics
-from .maps.maps import *
 from .MyMertrics import *
-from joblib import load
 from sklearn.naive_bayes import ComplementNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier

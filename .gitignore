@@ -2,7 +2,7 @@
 myData/*.txt
 myData/*.map
 myData/*.res
-*.csv
+myData/*.csv
 models/
 __pycache__
 *.bak
