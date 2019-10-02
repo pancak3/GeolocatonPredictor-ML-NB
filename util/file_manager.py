@@ -2,6 +2,7 @@ import logging
 import datetime
 import os
 import shutil
+from pathlib import Path
 from pprint import pformat
 from joblib import dump, load
 from .MyClasses import Model
@@ -26,4 +27,5 @@ def load_model(f_path):
 def remake_dir(dir_name):
     if os.path.exists(dir_name):
         shutil.rmtree(dir_name)
-    os.mkdir(dir_name, 0o755)
+    Path(dir_name).mkdir(parents=True, exist_ok=True)
+    # os.mkdir(dir_name, 0o755)
