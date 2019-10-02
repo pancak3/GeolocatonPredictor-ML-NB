@@ -1,3 +1,4 @@
+import numpy as np
 from .file_manager import *
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
@@ -40,13 +41,13 @@ def complement_nb(train_path, test_path, test_original_path):
     dev_features = pd.read_csv(test_path)
     clf = ComplementNB(alpha=1.0e-10)
     param_dist = {
-        "n_estimators": [106],
-        "max_samples": [0.2],
-        "max_features": [0.5],
-        # "n_estimators": range(100, 110, 2),
-        # "max_samples": np.linspace(0.1, 0.4, 4),
-        # "max_features": np.linspace(0.3, 0.7, 5),
-        "warm_start": [True]
+        # "n_estimators": [106],
+        # "max_samples": [0.2],
+        # "max_features": [0.5],
+        "n_estimators": range(20, 200, 2),
+        "max_samples": np.linspace(0.1, 1, 10),
+        "max_features": np.linspace(0.1, 1, 10),
+        "warm_start": [True, False]
     }
     bag = BaggingClassifier(base_estimator=clf)
 
