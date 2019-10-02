@@ -209,7 +209,7 @@ def result_combination(is_train=True):
     predict_y = final_res
 
     if is_train:
-        predict_y = predict_y["class"].map(MAP).tolist()
+        # predict_y = predict_y["class"].map(MAP).tolist()
         actual_y = pd.read_csv("datasets/dev-best200.csv")['class'].map(MAP).to_list()
         accuracy = metrics.accuracy_score(actual_y, predict_y)
         precision = metrics.precision_score(actual_y, predict_y, average=None)

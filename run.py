@@ -21,8 +21,8 @@ def run_train(train_path, evaluate_path, models_num):
     remake_dir("models/")
     remake_dir("results/train")
 
-    merge.merge(train_path)
-    merge.merge(evaluate_path)
+    # merge.merge(train_path)
+    # merge.merge(evaluate_path)
 
     train_basename = os.path.basename(train_path)
     evaluate_basename = os.path.basename(evaluate_path)
@@ -58,7 +58,7 @@ def arg_parse():
         description='This script is used for predicting geotag of tweets based on Complement Naive Bayes.')
     parser.add_argument('-t', '--train', type=str, nargs=3,
                         metavar=('train_set_path', 'evaluate_set_path', 'models_num'),
-                        help='python3 run.py -t ${train_set_path} ${evaluate_set_path}')
+                        help='python3 run.py -t ${train_set_path} ${evaluate_set_path} ${models_num} \n models_num >= 3 ')
 
     parser.add_argument('-p', '--predict', type=str, nargs=2, metavar=('models_path', 'test_set_path'),
                         help='python3 run.py -p ${models_path} ${test_set_path}')
@@ -69,7 +69,7 @@ def arg_parse():
     # start = time.time()
     time_cost = {}
     is_arg_empty = True
-    if args.train is not None:
+    if args.train is not None and int(args.predict[2]) > 2:
         time_cost.update({"Train": time.time()})
         run_train(args.train[0], args.train[1], args.train[2])
         time_cost["Train"] = time.time() - time_cost["Train"]
