@@ -24,5 +24,6 @@ def load_model(f_path):
 
 
 def remake_dir(dir_name):
-    shutil.rmtree(dir_name)
+    if os.path.exists(dir_name):
+        shutil.rmtree(dir_name)
     os.mkdir(dir_name, 0o755)
