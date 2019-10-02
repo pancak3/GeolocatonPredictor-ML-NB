@@ -32,7 +32,7 @@ def run_train(train_path, evaluate_path, models_num):
     # f_path = train.random_forest("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
     #                              evaluate_path)
     logging.info("[*] Training on {}, evaluating on {}".format(train_path, evaluate_path))
-    for i in range(models_num):
+    for i in range(int(models_num)):
         train.complement_nb("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
                             evaluate_path)
     merge.result_combination(is_train=True)
