@@ -14,6 +14,7 @@ from sklearn.feature_selection import chi2, f_classif, mutual_info_classif, Sele
 from sklearn.feature_selection import VarianceThreshold
 from ..MyMertrics import *
 from pprint import pprint, pformat
+from util.file_manager import remake_dir
 
 
 def feature_filter(features_list):
@@ -39,7 +40,8 @@ def merge(f_path):
     :param f_path: file path
     :return: results path
     """
-
+    if not os.path.exists("myData"):
+        remake_dir("myData")
     logging.info("[*] Merging %s " % f_path)
     data = pd.read_csv(f_path)
     features = feature_filter(data.columns[2:-1])

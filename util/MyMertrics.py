@@ -32,9 +32,6 @@ def save_res(res, test_original_path, acc, is_train):
         res_path = "results/predict/{1}_{0}".format(filename, f"{datetime.datetime.now():%Y-%m-%d_%H:%M}")
 
     df.to_csv(res_path)
-    while not os.path.exists(res_path):
-        # block while not done saving task
-        pass
     logging.info("[*] Saved %s" % res_path)
 
 

@@ -5,9 +5,12 @@ import shutil
 from pprint import pformat
 from joblib import dump, load
 from .MyClasses import Model
+from util.file_manager import remake_dir
 
 
 def save_model(grid, test_acc, scores):
+    if not os.path.exists("models"):
+        remake_dir("models")
     model = Model(grid.best_params_, test_acc, grid.scoring, grid.cv, grid.best_estimator_, scores)
     f_path = 'models/{0:.4f}_{1}'.format(test_acc, f"{datetime.datetime.now():%Y-%m-%d_%H:%M}")
     dump(model, f_path)

@@ -1,8 +1,11 @@
 ## Geotag Predictor
 
-This is the code for predicting geotag of tweets. [Eisenstein, Jacob, et al.](http://www.cs.cmu.edu/~nasmith/papers/eisenstein+oconnor+smith+xing.emnlp10.pdf)
+This is the code for predicting geotag of tweets.
 ### Requirements
 + python3+
++ dataset, see [Eisenstein, Jacob, et al.](http://www.cs.cmu.edu/~nasmith/papers/eisenstein+oconnor+smith+xing.emnlp10.pdf)
+  Although the single file size of datasets is greater than 50.00 MB (See, [http://git.io/iEPt8g ](http://git.io/iEPt8g )), they were added in datasets for convenience.
+
 #### Installation
 ```pip
 pip install -r requirements.txt
@@ -65,4 +68,4 @@ python run.py -h
 + [sklearn](https://scikit-learn.org/stable/index.html)
 + [tqdm](https://github.com/tqdm/tqdm.git)
 ### License
-See [LICENSE](blob/master/LICENSE) file.
+See [LICENSE](LICENSE) file.

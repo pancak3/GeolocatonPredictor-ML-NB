@@ -4,6 +4,7 @@ myData/*.map
 myData/*.res
 myData/*.csv
 models/
+*__init__.py
 __pycache__
 *.bak
 log

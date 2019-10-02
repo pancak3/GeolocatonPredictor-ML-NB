@@ -20,8 +20,8 @@ def run_train(train_path, evaluate_path):
     remake_dir("models/")
     remake_dir("results/train")
 
-    # merge.merge(train_path)
-    # merge.merge(evaluate_path)
+    merge.merge(train_path)
+    merge.merge(evaluate_path)
 
     train_basename = os.path.basename(train_path)
     evaluate_basename = os.path.basename(evaluate_path)
@@ -46,7 +46,7 @@ def run_predict(models_path, test_path):
     """
     remake_dir("results/predict")
 
-    # merge.merge(test_path)
+    merge.merge(test_path)
 
     predict.predict(models_path, test_path)
     merge.result_combination(is_train=False)
