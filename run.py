@@ -72,18 +72,18 @@ def arg_parse():
     if args.train is not None and len(args.train) == 3 and int(args.train[2]) > 2:
         time_cost.update({"Train": time.time()})
         run_train(args.train[0], args.train[1], args.train[2])
-        time_cost["Train"] = "{0:.2f}".format(time.time() - time_cost["Train"])
+        time_cost["Train"] = "{0:.2f}s".format(time.time() - time_cost["Train"])
         is_arg_empty = False
     if args.predict is not None and len(args.predict) == 2:
         time_cost.update({"Predict": time.time()})
         run_predict(args.predict[0], args.predict[1])
-        time_cost["Predict"] = "{0:.2f}".format(time.time() - time_cost["Predict"])
+        time_cost["Predict"] = "{0:.2f}s".format(time.time() - time_cost["Predict"])
         is_arg_empty = False
 
     if args.score is not None and len(args.score) == 2:
         time_cost.update({"Score": time.time()})
         get_scores(args.score[0], args.score[1])
-        time_cost["Score"] = "{0:.2f}".format(time.time() - time_cost["Score"])
+        time_cost["Score"] = "{0:.2f}s".format(time.time() - time_cost["Score"])
         is_arg_empty = False
 
     if is_arg_empty:

@@ -8,15 +8,15 @@ In `util/preprocessing/merge.py`,
 + `merge` also shows it uses [Chi-square](https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.chi2.html) with a threshold `0.001` to select features that are more relative with classes.
 ###  Classifier Combination 
 In `preprocess/merge.py`,
-+`result_combination` shows it uses multiple results to vote out the majority prediction while the following shows the models can be slightly different every time training.
++ `result_combination` shows it uses multiple results to vote out the majority prediction while the following shows the models can be slightly different every time training.
 #### Instance manipulation
 In `util/train.py`,
-+`complement_nb` shows it uses [bagging](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingClassifier.html) to generate multiple training datasets. 
-+`complement_nb` also shows it uses [42-Fold Cross Validation](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) to generate multiple training datasets. 
++ `complement_nb` shows it uses [bagging](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingClassifier.html) to generate multiple training datasets. 
++ `complement_nb` also shows it uses [42-Fold Cross Validation](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) to generate multiple training datasets. 
 
 #### Algorithm manipulation:
 In `util/train.py`, 
-+`complement_nb` also shows it uses [GridSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) to generate multiple classifiers and select the best based on `accuracy`. 
++ `complement_nb` also shows it uses [GridSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) to generate multiple classifiers and select the best based on `accuracy`. 
 ### Dataset
 + See [Eisenstein, Jacob, et al.](http://www.cs.cmu.edu/~nasmith/papers/eisenstein+oconnor+smith+xing.emnlp10.pdf)
   Although some file's size in datasets is greater than 50.00 MB, it was still added in `datasets` for convenience. (See, [http://git.io/iEPt8g ](http://git.io/iEPt8g ))
@@ -35,7 +35,7 @@ python run.py -t datasets/train-best200.csv datasets/dev-best200.csv 7
 the output would be like:
 ```
 INFO:root:[*] Merging datasets/train-best200.csv 
- 22%|█████          | 539/2396 [00:05<00:20, 92.03 users/s]
+ 42%|████████         | 1006/2396 [00:05<00:20, 92.03 users/s]
 ...
 ...
 [*] Saved models/0.8126_2019-10-02_20:02
