@@ -69,18 +69,18 @@ def arg_parse():
     # start = time.time()
     time_cost = {}
     is_arg_empty = True
-    if args.train is not None and int(args.predict[2]) > 2:
+    if args.train is not None and len(args.train) == 3 and int(args.train[2]) > 2:
         time_cost.update({"Train": time.time()})
         run_train(args.train[0], args.train[1], args.train[2])
         time_cost["Train"] = time.time() - time_cost["Train"]
         is_arg_empty = False
-    if args.predict is not None:
+    if args.predict is not None and len(args.predict) == 2:
         time_cost.update({"Predict": time.time()})
         run_predict(args.predict[0], args.predict[1])
         time_cost["Predict"] = time.time() - time_cost["Predict"]
         is_arg_empty = False
 
-    if args.score is not None:
+    if args.score is not None and len(args.score) == 2:
         time_cost.update({"Score": time.time()})
         get_scores(args.score[0], args.score[1])
         time_cost["Score"] = time.time() - time_cost["Score"]
