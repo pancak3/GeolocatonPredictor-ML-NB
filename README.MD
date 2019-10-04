@@ -1,5 +1,5 @@
 # Geotag Predictor
-This is the code for predicting geotag of tweets based on Complement Naive Bayes.
+This is the code for predicting geotag of tweets based on token frequency using Complement Naive Bayes.
 ## Implementation
 ###  Feature selection 
 In `util/preprocessing/merge.py`,
