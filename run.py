@@ -22,8 +22,9 @@ def run_train(train_path, evaluate_path, models_num):
     remake_dir("models/")
     remake_dir("results/train")
 
-    # merge.merge(train_path)
-    # merge.merge(evaluate_path)
+    merge.merge(train_path)
+    if train_path != evaluate_path:
+        merge.merge(evaluate_path)
 
     train_basename = os.path.basename(train_path)
     evaluate_basename = os.path.basename(evaluate_path)
@@ -48,7 +49,7 @@ def run_predict(models_path, test_path):
     """
     remake_dir("results/predict")
 
-    # merge.merge(test_path)
+    merge.merge(test_path)
 
     predict.predict(models_path, test_path)
     merge.result_combination(is_train=False)
@@ -65,7 +66,7 @@ def arg_parse():
                         help='python3 run.py -p ${models_path} ${test_set_path}')
 
     parser.add_argument('-s', '--score', type=str, nargs=2, metavar=('prediction_path', 'actual_path'),
-                        help='python3 run.py -p ${prediction result path} ${actual path}')
+                        help='python3 run.py -s ${prediction result path} ${actual path}')
     args = parser.parse_args()
     # start = time.time()
     time_cost = {}
