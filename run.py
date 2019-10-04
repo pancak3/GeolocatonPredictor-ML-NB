@@ -8,6 +8,7 @@ from util.file_manager import *
 from util.preprocessing import merge
 from util.MyMertrics import get_scores
 from pprint import pprint
+from tqdm import tqdm
 
 
 def run_train(train_path, evaluate_path, models_num):
@@ -21,8 +22,8 @@ def run_train(train_path, evaluate_path, models_num):
     remake_dir("models/")
     remake_dir("results/train")
 
-    merge.merge(train_path)
-    merge.merge(evaluate_path)
+    # merge.merge(train_path)
+    # merge.merge(evaluate_path)
 
     train_basename = os.path.basename(train_path)
     evaluate_basename = os.path.basename(evaluate_path)
@@ -32,7 +33,7 @@ def run_train(train_path, evaluate_path, models_num):
     # f_path = train.random_forest("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
     #                              evaluate_path)
     logging.info("[*] Training on {}, evaluating on {}".format(train_path, evaluate_path))
-    for i in range(int(models_num)):
+    for i in tqdm(range(int(models_num)), unit=" classifiers"):
         train.complement_nb("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
                             evaluate_path)
     merge.result_combination(is_train=True)
@@ -47,7 +48,7 @@ def run_predict(models_path, test_path):
     """
     remake_dir("results/predict")
 
-    merge.merge(test_path)
+    # merge.merge(test_path)
 
     predict.predict(models_path, test_path)
     merge.result_combination(is_train=False)

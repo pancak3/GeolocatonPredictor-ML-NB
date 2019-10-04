@@ -51,7 +51,7 @@ def complement_nb(train_path, test_path, test_original_path):
     bag = BaggingClassifier(base_estimator=clf)
 
     # grid = RandomizedSearchCV(bag, param_dist, cv=42, n_iter=300, scoring='accuracy', n_jobs=-1, verbose=2, refit=True)
-    grid = GridSearchCV(bag, param_dist, cv=42, scoring='accuracy', n_jobs=-1, verbose=2, refit=True)
+    grid = GridSearchCV(bag, param_dist, cv=42, scoring='accuracy', n_jobs=-1, verbose=0, refit=True)
     grid.fit(train_features.iloc[:, 1:-1], train_features['class'].to_list())
     res = grid.best_estimator_.predict(dev_features.iloc[:, 1:-1])
     accuracy, scores = my_score(res, test_original_path, True)
