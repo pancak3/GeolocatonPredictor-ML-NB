@@ -6,6 +6,7 @@ from .maps.maps import *
 from sklearn import metrics
 from joblib import load
 from pprint import pprint
+from tqdm import tqdm
 
 
 def save_res(res, test_original_path, acc, is_train):
@@ -31,6 +32,8 @@ def save_res(res, test_original_path, acc, is_train):
         filename = filename.replace("_merged", '')
         res_path = "results/predict/{1}_{0}".format(filename, f"{datetime.datetime.now():%Y-%m-%d_%H:%M}")
 
+    while os.path.exists(res_path):
+        res_path = res_path[:-4] + '_.csv'
     df.to_csv(res_path)
     logging.info("[*] Saved %s" % res_path)
 
@@ -50,7 +53,8 @@ def my_score(predict_y, test_original_path, is_train=True):
     id_map = load(map_path)
     test_original_df = pd.read_csv(test_original_path)
     predict_y_mapped = test_original_df["class"]
-    for idx, value in enumerate(predict_y):
+    logging.info("[*] Remapping ...")
+    for idx, value in tqdm(enumerate(predict_y), unit=" users", total=len(predict_y)):
         predict_y_mapped.update(pd.Series([value for i in range(len(id_map[idx]))], index=id_map[idx], dtype=int))
 
     if is_train:
@@ -87,7 +91,7 @@ def get_scores(pred_path, actual_path):
     pred = pd.read_csv(pred_path)
     actual = pd.read_csv(actual_path)
 
-    actual_y, predict_y = actual["class"], pred["class"]
+    actual_y, predict_y = actual["class"].map(MAP), pred["class"].to_list()
     accuracy = metrics.accuracy_score(actual_y, predict_y)
     precision = metrics.precision_score(actual_y, predict_y, average=None)
     recall = metrics.recall_score(actual_y, predict_y, average=None)

@@ -37,7 +37,7 @@ def run_train(train_path, evaluate_path, models_num):
     for i in tqdm(range(int(models_num)), unit=" classifiers"):
         train.complement_nb("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
                             evaluate_path)
-    merge.result_combination(is_train=True)
+    merge.result_combination(is_train=True, evaluate_set_path=evaluate_path)
 
 
 def run_predict(models_path, test_path):

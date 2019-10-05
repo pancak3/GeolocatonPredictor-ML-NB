@@ -77,7 +77,7 @@ Georgia      0.909456  0.858296  0.883136
 weighted     0.833854  0.822470  0.824577
 INFO:root:[*] Time costs in seconds:
               Score
-Time_cost  1.48
+Time_cost  1.48s
 
 ```
 ### Train&Predict&Score
@@ -97,6 +97,7 @@ python run.py -h
 + [sklearn](https://scikit-learn.org/stable/index.html) for easily using Complement Naive Bayes, some feature selectors and other learning tools.
 + [pandas](https://github.com/pandas-dev/pandas.git) for easily handling data.
 + [tqdm](https://github.com/tqdm/tqdm.git) for showing the process of loop.
++ [joblib](https://joblib.readthedocs.io/en/latest/) for dumping/loading memory to/from disk.
 + <strike>[nltk](https://github.com/tqdm/tqdm.git) for capturing word types on the purpose of feature filtering</strike>
 ## License
 See [LICENSE](LICENSE) file.

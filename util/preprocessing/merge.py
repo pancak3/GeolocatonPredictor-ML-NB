@@ -180,10 +180,11 @@ def word_type(data_path):
     logging.info("[*] Saved word type %s \n" % wt_path)
 
 
-def result_combination(is_train=True):
+def result_combination(is_train=True, evaluate_set_path=None):
     """
 
     :param is_train: is train default True
+    :param evaluate_set_path: if is train, should give evaluate_set_path
     :return: None
     """
     if is_train:
@@ -203,14 +204,17 @@ def result_combination(is_train=True):
         final_res = []
         for i, row in tqdm(concat_res.iterrows(), unit=" rows", total=concat_res.shape[0]):
             final_res.append(row.map(MAP).mode()[0])
-    else:
+    elif len(filenames):
         final_res = results[0]
+    else:
+        logging.info("[*] No results!")
+        exit(0)
 
     predict_y = final_res
 
     if is_train:
         # predict_y = predict_y["class"].map(MAP).tolist()
-        actual_y = pd.read_csv("datasets/dev-best200.csv")['class'].map(MAP).to_list()
+        actual_y = pd.read_csv(evaluate_set_path)['class'].map(MAP).to_list()
         accuracy = metrics.accuracy_score(actual_y, predict_y)
         precision = metrics.precision_score(actual_y, predict_y, average=None)
         recall = metrics.recall_score(actual_y, predict_y, average=None)
@@ -227,7 +231,7 @@ def result_combination(is_train=True):
         logging.info("[*] Accuracy: %s" % accuracy)
         logging.info(pformat(scores))
     else:
-
+        final_res = pd.DataFrame(final_res, columns=["class"])
         final_res.to_csv("results/final_results.csv")
         print("\n")
         logging.info("[*] Saved results/final_results.csv")

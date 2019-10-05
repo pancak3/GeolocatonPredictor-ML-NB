@@ -17,10 +17,9 @@ def predict(model_path, test_path):
     for (t, t, filenames) in os.walk(model_path):
         logging.info("[*] Predicting {0} with {1} models".format(test_path, len(filenames)))
 
-        for filename in tqdm(filenames, unit=" models"):
+        for filename in filenames:
             best_estimator = load(os.path.join(model_path, filename)).model
             res = best_estimator.predict(dev_features.iloc[:, 1:-1])
             my_score(res, test_path, is_train=False)
         break
 
-    merge.result_combination(is_train=False)
