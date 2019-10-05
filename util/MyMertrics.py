@@ -90,7 +90,8 @@ def get_scores(pred_path, actual_path):
     """
     pred = pd.read_csv(pred_path)
     actual = pd.read_csv(actual_path)
-
+    if type(pred["class"][0]) is not int:
+        pred["class"] = pred["class"].map(MAP)
     actual_y, predict_y = actual["class"].map(MAP), pred["class"].to_list()
     accuracy = metrics.accuracy_score(actual_y, predict_y)
     precision = metrics.precision_score(actual_y, predict_y, average=None)

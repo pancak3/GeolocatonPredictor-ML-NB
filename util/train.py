@@ -1,8 +1,9 @@
+from numpy import linspace
 from .file_manager import *
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from .MyMertrics import *
-from sklearn.naive_bayes import ComplementNB
+from sklearn.naive_bayes import ComplementNB, MultinomialNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import BaggingClassifier
 
@@ -38,7 +39,7 @@ def complement_nb(train_path, test_path, test_original_path):
     """
     train_features = pd.read_csv(train_path)
     dev_features = pd.read_csv(test_path)
-    clf = ComplementNB(alpha=1.0e-10)
+    clf = MultinomialNB(alpha=1.0e-10)
     param_dist = {
         "n_estimators": [106],
         "max_samples": [0.2],
@@ -49,9 +50,8 @@ def complement_nb(train_path, test_path, test_original_path):
         "warm_start": [True]
     }
     bag = BaggingClassifier(base_estimator=clf)
-
     # grid = RandomizedSearchCV(bag, param_dist, cv=42, n_iter=300, scoring='accuracy', n_jobs=-1, verbose=2, refit=True)
-    grid = GridSearchCV(bag, param_dist, cv=42, scoring='accuracy', n_jobs=-1, verbose=0, refit=True)
+    grid = GridSearchCV(bag, param_dist, cv=42, scoring='accuracy', n_jobs=-1, verbose=2, refit=True)
     grid.fit(train_features.iloc[:, 1:-1], train_features['class'].to_list())
     res = grid.best_estimator_.predict(dev_features.iloc[:, 1:-1])
     accuracy, scores = my_score(res, test_original_path, True)
@@ -67,14 +67,25 @@ def decision_tree(train_path, test_path, test_original_path):
     clf = DecisionTreeClassifier()
     # clf = ExtraTreeClassifier()
     param_dist = {
-        "max_depth": [None],
-        "min_samples_split": range(2, 3),
-        "random_state": [0]
+        # "max_depth": [None],
+        # "min_samples_split": range(2, 3),
+        # "random_state": [0]
+        "criterion": ["entropy", "gini"],
+        "min_samples_split": linspace(1.0e-5, 0.5, 1),
+        # "class_weight": [{0: 1, 1: 1, 2: 1}],
+        "min_samples_leaf": linspace(1.0e-5, 0.5, 10),
+        "min_impurity_decrease": linspace(1.0e-5, 1, 10),
+        "presort": [True, False]
+        # "max_depth":[]
     }
 
     grid = GridSearchCV(clf, param_dist, cv=10, scoring='accuracy', n_jobs=-1, verbose=2)
     grid.fit(train_features.iloc[:, 1:-1], train_features['class'].to_list())
 
+    # from sklearn.tree.export import export_text
+    # r = export_text(grid.best_estimator_)
+    # pprint(r)
+    # exit(0)
     res = grid.best_estimator_.predict(dev_features.iloc[:, 1:-1])
 
     accuracy, scores = my_score(res, test_original_path, True)

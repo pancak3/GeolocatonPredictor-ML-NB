@@ -232,6 +232,7 @@ def result_combination(is_train=True, evaluate_set_path=None):
         logging.info(pformat(scores))
     else:
         final_res = pd.DataFrame(final_res, columns=["class"])
+        final_res = pd.DataFrame(final_res["class"].map(REMAP), columns=["class"])
         final_res.to_csv("results/final_results.csv")
         print("\n")
         logging.info("[*] Saved results/final_results.csv")
