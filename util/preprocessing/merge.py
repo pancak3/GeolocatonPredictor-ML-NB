@@ -93,8 +93,8 @@ def merge(f_path):
     # features selector
     if "train" in filename:
         from sklearn.feature_selection import RFE
-        from sklearn.naive_bayes import BernoulliNB
-        nb = BernoulliNB(alpha=1.0e-10)
+        from sklearn.naive_bayes import ComplementNB
+        nb = ComplementNB(alpha=1.0e-10)
         selector = RFE(estimator=nb, n_features_to_select=300, step=1)
         selector.fit(new_df.iloc[:, :-1], new_df["class"].to_list())
         # selector = SelectFpr(chi2, alpha=1e-3)

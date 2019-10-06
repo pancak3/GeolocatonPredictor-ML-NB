@@ -15,7 +15,6 @@ def run_train(train_path, evaluate_path):
 
     :param train_path: train set path
     :param evaluate_path: evaluation set path
-    :param models_num: models num for results voting
     :return:
     """
     remake_dir("models/")
@@ -29,12 +28,8 @@ def run_train(train_path, evaluate_path):
     evaluate_basename = os.path.basename(evaluate_path)
     logging.info("[*] Training on {}, evaluating on {}".format(train_path, evaluate_path))
 
-    # f_path = train.decision_tree("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
-    #                              evaluate_path)
-    # f_path = train.random_forest("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
-    #                              evaluate_path)
-    train.naive_bayes("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
-                      evaluate_path)
+    train.container("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
+                    evaluate_path)
     merge.result_combination(is_train=True, evaluate_set_path=evaluate_path)
 
 
