@@ -8,10 +8,9 @@ from util.file_manager import *
 from util.preprocessing import merge
 from util.MyMertrics import get_scores
 from pprint import pprint
-from tqdm import tqdm
 
 
-def run_train(train_path, evaluate_path, models_num):
+def run_train(train_path, evaluate_path):
     """
 
     :param train_path: train set path
@@ -22,21 +21,20 @@ def run_train(train_path, evaluate_path, models_num):
     remake_dir("models/")
     remake_dir("results/train")
 
-    # merge.merge(train_path)
-    # if train_path != evaluate_path:
-    #     merge.merge(evaluate_path)
+    merge.merge(train_path)
+    if train_path != evaluate_path:
+        merge.merge(evaluate_path)
 
     train_basename = os.path.basename(train_path)
     evaluate_basename = os.path.basename(evaluate_path)
+    logging.info("[*] Training on {}, evaluating on {}".format(train_path, evaluate_path))
 
     # f_path = train.decision_tree("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
     #                              evaluate_path)
     # f_path = train.random_forest("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
     #                              evaluate_path)
-    logging.info("[*] Training on {}, evaluating on {}".format(train_path, evaluate_path))
-    for i in tqdm(range(int(models_num)), unit=" classifiers"):
-        train.complement_nb("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
-                            evaluate_path)
+    train.naive_bayes("myData/merged_" + train_basename, "myData/merged_" + evaluate_basename,
+                      evaluate_path)
     merge.result_combination(is_train=True, evaluate_set_path=evaluate_path)
 
 
@@ -58,22 +56,22 @@ def run_predict(models_path, test_path):
 def arg_parse():
     parser = argparse.ArgumentParser(
         description='This script is used for predicting geotag of tweets based on Complement Naive Bayes.')
-    parser.add_argument('-t', '--train', type=str, nargs=3,
-                        metavar=('train_set_path', 'evaluate_set_path', 'models_num'),
-                        help='python3 run.py -t ${train_set_path} ${evaluate_set_path} ${models_num} \n models_num >= 3 ')
+    parser.add_argument('-t', '--train', type=str, nargs=2,
+                        metavar=('train_set_path', 'evaluate_set_path'),
+                        help='python3 run.py -t ${train_set_path} ${evaluate_set_path}')
 
     parser.add_argument('-p', '--predict', type=str, nargs=2, metavar=('models_path', 'test_set_path'),
                         help='python3 run.py -p ${models_path} ${test_set_path}')
 
     parser.add_argument('-s', '--score', type=str, nargs=2, metavar=('prediction_path', 'actual_path'),
-                        help='python3 run.py -s ${prediction result path} ${actual path}')
+                        help='python3 run.py -s ${prediction_result_path} ${actual_set_path}')
     args = parser.parse_args()
     # start = time.time()
     time_cost = {}
     is_arg_empty = True
-    if args.train is not None and len(args.train) == 3 and int(args.train[2]) > 2:
+    if args.train is not None and len(args.train) == 2:
         time_cost.update({"Train": time.time()})
-        run_train(args.train[0], args.train[1], args.train[2])
+        run_train(args.train[0], args.train[1])
         time_cost["Train"] = "{0:.2f}s".format(time.time() - time_cost["Train"])
         is_arg_empty = False
     if args.predict is not None and len(args.predict) == 2:

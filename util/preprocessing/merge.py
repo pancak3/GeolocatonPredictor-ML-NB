@@ -8,12 +8,8 @@ from tqdm import tqdm
 from joblib import dump, load
 from nltk.tokenize import word_tokenize
 from nltk import pos_tag
-from ..maps.maps import *
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2, f_classif, mutual_info_classif, SelectFpr
-from sklearn.feature_selection import VarianceThreshold
 from ..MyMertrics import *
-from pprint import pprint, pformat
+from pprint import pformat
 from util.file_manager import remake_dir
 
 
@@ -44,8 +40,8 @@ def merge(f_path):
         remake_dir("myData")
     logging.info("[*] Merging %s " % f_path)
     data = pd.read_csv(f_path)
-    features = feature_filter(data.columns[2:-1])
-    data = data.drop(columns=features)
+    # features = feature_filter(data.columns[2:-1])
+    # data = data.drop(columns=features)
 
     data_features = data.columns[2:-1]
     features = [[], [], [], []]
@@ -63,22 +59,19 @@ def merge(f_path):
     features.append(["icheated", "icheatedbecause"])
     features.append(["lt", "ltlt", "ltreply"])
     features.append(["mad", "madd"])
-
-    # features.append(["huh", "hun"])
-    # features.append(["flex", "flexin"])
-    # features.append(["dam", "damn", 'da'])
-    # features.append(["kno", "know", 'knw'])
-    # features.append(["dat", "dats"])
-    # # features.append(["gon", "gone"])
-    # # features.append(["iono", "ion"])
-    # features.append(["factaboutme", "factsaboutme"])
-    # features.append(["taco", "tacos"])
-    # features.append(["icheated", "icheatedbecause"])
-    # features.append(["lt", "ltlt", "ltreply"])
-    # features.append(["mad", "madd"])
-    # features.append(["bt", "btwn"])
-    # # features.append(["loll", "lolss", "lolsz"])
-    # # features.append(["cali", "california"])
+    features.append(["b", "be"])
+    features.append(["n", "and"])
+    features.append(["u", "you"])
+    features.append(["flex", "flexin"])
+    features.append(["dam", "damn", 'da'])
+    features.append(["kno", "know", 'knw'])
+    features.append(["dat", "dats"])
+    features.append(["gon", "gone"])
+    features.append(["iono", "ion"])
+    features.append(["factaboutme", "factsaboutme"])
+    features.append(["bt", "btwn"])
+    features.append(["loll", "lolss", "lolsz"])
+    features.append(["cali", "california"])
 
     for f in features:
         data = merge_similar_feature(data, f)
@@ -99,28 +92,13 @@ def merge(f_path):
     filename = os.path.basename(f_path)
     # features selector
     if "train" in filename:
-        # classes = [0, 1, 2]
-        # features_percentage = pd.DataFrame(columns=classes, index=new_df.columns[:-1])
-        # for cls in classes:
-        #     data_class = new_df[new_df["class"] == cls].iloc[:, :-1].sum(axis=0)
-        #     data_class_df = pd.DataFrame(data_class, columns=[cls])
-        #     features_percentage[cls] = data_class_df
-        #
-        # # features_sum = features_percentage.sum(axis=1)
-        # features_std = features_percentage.std(axis=1)
-        # features_mean = features_percentage.mean(axis=1)
-        # keep_features_list = []
-        # for items in features_std.iteritems():
-        #     if items[1] < features_mean[items[0]]:
-        #         keep_features_list.append(items[0])
-        #
-        # new_df = new_df.drop(columns=keep_features_list)
-
-        # selector = SelectKBest(f_classif, k=200)
-        # selector = VarianceThreshold(threshold=0.01)
-        # selector = SelectFpr(f_classif, alpha=1.0e-3)
-        selector = SelectFpr(chi2, alpha=1.0e-3)
-        selector.fit_transform(new_df.iloc[:, :-1], new_df["class"].to_list())
+        from sklearn.feature_selection import RFE
+        from sklearn.naive_bayes import BernoulliNB
+        nb = BernoulliNB(alpha=1.0e-10)
+        selector = RFE(estimator=nb, n_features_to_select=300, step=1)
+        selector.fit(new_df.iloc[:, :-1], new_df["class"].to_list())
+        # selector = SelectFpr(chi2, alpha=1e-3)
+        # selector.fit_transform(new_df.iloc[:, :-1], new_df["class"].to_list())
         features_map = selector.get_support(indices=True)
         dump(features_map, "myData/features.map")
     else:

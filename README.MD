@@ -1,5 +1,5 @@
 # Geotag Predictor
-This is the code for predicting geotag of tweets based on token frequency using Complement Naive Bayes.
+This is the code for predicting geotag of tweets based on token frequency using Naive Bayes.
 ## Implementation
 ###  Feature selection 
 In `util/preprocessing/merge.py`,
@@ -33,7 +33,7 @@ pip install -r requirements.txt
     <strong>MAKE SURE</strong> you have saved your satisfying models.
 ### Train
 ```python
-python run.py -t datasets/train-best200.csv datasets/dev-best200.csv 7
+python run.py -t datasets/train-best200.csv datasets/dev-best200.csv
 
 ```
 the output would be like:
@@ -83,7 +83,7 @@ Time_cost  1.48s
 ### Train&Predict&Score
 ```python
 python run.py \
-    -t datasets/train-best200.csv datasets/dev-best200.csv 7 \
+    -t datasets/train-best200.csv datasets/dev-best200.csv \
     -p models/ datasets/dev-best200.csv \
     -s results/final_results.csv  datasets/dev-best200.csv 
 ```
