@@ -1,6 +1,6 @@
 
-# Geotag Predictor  
-This is the code for predicting geotag of tweets trainning on token frequencies using Decision Tree and Naïve Bayes.  
+# Geolocaton Predictor  
+This is the code for predicting geolocaton of tweets trainning on token frequencies using Decision Tree and Naïve Bayes.  
 ## Implementation  
 ###  Feature selection
 In `util/preprocessing/merge.py`,  
