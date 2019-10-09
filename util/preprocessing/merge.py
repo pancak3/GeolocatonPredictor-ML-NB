@@ -92,14 +92,18 @@ def merge(f_path):
     filename = os.path.basename(f_path)
     # features selector
     if "train" in filename:
-        from sklearn.feature_selection import RFE
-        from sklearn.naive_bayes import ComplementNB
-        nb = ComplementNB(alpha=1.0e-10)
+        from sklearn.feature_selection import RFE, mutual_info_classif, SelectFpr
+        from sklearn.naive_bayes import MultinomialNB
+
+        # nb = ComplementNB(alpha=1.0e-10)
+        nb = MultinomialNB(alpha=1.0e-10)
         selector = RFE(estimator=nb, n_features_to_select=300, step=1)
-        selector.fit(new_df.iloc[:, :-1], new_df["class"].to_list())
-        # selector = SelectFpr(chi2, alpha=1e-3)
-        # selector.fit_transform(new_df.iloc[:, :-1], new_df["class"].to_list())
+        # selector.fit(new_df.iloc[:, :-1], new_df["class"].to_list())
+        # selector = SelectFpr(mutual_info_classif, alpha=1e-3)
+        selector.fit_transform(new_df.iloc[:, :-1], new_df["class"].to_list())
         features_map = selector.get_support(indices=True)
+        # mi = mutual_info_classif(new_df.iloc[:, :-1], new_df["class"].to_list())
+        # features_map = np.argsort(mi)[-300:]
         dump(features_map, "myData/features.map")
     else:
         features_map = load("myData/features.map")

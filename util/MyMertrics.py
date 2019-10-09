@@ -46,6 +46,8 @@ def my_score(predict_y, test_original_path, is_train=True):
     :param is_train: called by train
     :return: (accuracy,scores)
     """
+    # full_res = predict_y.copy()
+    # predict_y = predict_y.argmax(axis=1)
     filename = os.path.basename(test_original_path)
 
     map_path = os.path.join("myData", 'merged_' + filename + ".map")
