@@ -28,10 +28,11 @@ In `util/train.py`,
 pip install -r requirements.txt  
 ```  
 ## Usage  
-> **Note:** The code will remove the old models and results every time running.  <strong>MAKE SURE</strong> you have saved your satisfying models..### Train  
+> **Note:** The code will remove the old models and results every time running.  <strong>MAKE SURE</strong> you have saved your satisfying models..
+
+### Train  
 ```python  
 python run.py -t datasets/train-best200.csv datasets/dev-best200.csv  
-  
 ```  
 the output would be like:  
 ```  
@@ -87,7 +88,7 @@ python run.py -h
   
 ## Used libraries  
 + [sklearn](https://scikit-learn.org/stable/index.html) for easily using Complement Naive Bayes, some feature selectors and other learning tools.  
-+ [pandas](https://github.com/pandas-dev/pandas.git)[numpy](https://github.com/numpy/numpy.git)  for easily handling data.  
++ [pandas](https://github.com/pandas-dev/pandas.git), [numpy](https://github.com/numpy/numpy.git)  for easily handling data.  
 + [tqdm](https://github.com/tqdm/tqdm.git) for showing the process of loop.  
 + [joblib](https://joblib.readthedocs.io/en/latest/) for dumping/loading memory to/from disk.  
 + <strike>[nltk](https://github.com/tqdm/tqdm.git) for capturing word types on the purpose of feature filtering</strike>  
