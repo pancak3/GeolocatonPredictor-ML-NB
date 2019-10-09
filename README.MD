@@ -2,18 +2,20 @@
 # Geotag Predictor  
 This is the code for predicting geotag of tweets trainning on token frequencies using Decision Tree and Naïve Bayes.  
 ## Implementation  
-###  Feature selection In `util/preprocessing/merge.py`,  
+###  Feature selection
+In `util/preprocessing/merge.py`,  
 + `feature_filter` shows it drops single character features like `[a, b, ..., n]`  
 - `merge` shows it intuitively merges similar features like `[aha, ahah, ..., ahahahaha]` and `[taco, tacos]`  
 + `merge` also shows it uses [Recursive Feature Elimination](https://scikit-learn.org/stable/auto_examples/feature_selection/plot_rfe_digits.html#sphx-glr-auto-examples-feature-selection-plot-rfe-digits-py) to rank features and select best 300 features.  
-###  Classifier Combination In `preprocess/merge.py`,  
+###  Classifier Combination 
+In `preprocess/merge.py`,  
 + `result_combination` shows it uses results of [Decision Tree](https://scikit-learn.org/stable/modules/tree.html), [Random Forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html), [Bernoulli Naïve Bayes](https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.BernoulliNB.html](https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.BernoulliNB.html)), [Complement Naïve Bayes](https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.ComplementNB.html) and [Multinomial Naïve Bayes](https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html) to vote out the majority predictions while the following shows the models can be slightly different every time training.  
-#### Instance manipulation  
+#### Instance manipulation
 In `util/train.py`,  
 + `complement_nb` shows it uses [bagging](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingClassifier.html) to generate multiple training datasets.   
 + `complement_nb` also shows it uses [42-Fold Cross Validation](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) to generate multiple training datasets.   
   
-#### Algorithm manipulation:  
+#### Algorithm manipulation
 In `util/train.py`,   
 + `complement_nb` also shows it uses [GridSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) to generate multiple classifiers and select the best based on `accuracy`.   
 ### Dataset  
@@ -73,7 +75,10 @@ INFO:root:[*] Time costs in seconds:
 ### Train&Predict&Score  
 ```python  
 python run.py \  
- -t datasets/train-best200.csv datasets/dev-best200.csv \ -p models/ datasets/dev-best200.csv \ -s results/final_results.csv  datasets/dev-best200.csv ```  
+ -t datasets/train-best200.csv datasets/dev-best200.csv \ 
+ -p models/ datasets/dev-best200.csv \ 
+ -s results/final_results.csv datasets/dev-best200.csv 
+```  
   
 ### Help  
 ```python  
