@@ -75,10 +75,10 @@ INFO:root:[*] Time costs in seconds:
 ```  
 ### Train&Predict&Score  
 ```python  
-python run.py \  
- -t datasets/train-best200.csv datasets/dev-best200.csv \ 
- -p models/ datasets/dev-best200.csv \ 
- -s results/final_results.csv datasets/dev-best200.csv 
+python run.py \
+ -t datasets/train-best200.csv datasets/dev-best200.csv \
+ -p models/ datasets/dev-best200.csv \
+ -s results/final_results.csv datasets/dev-best200.csv
 ```  
   
 ### Help  
