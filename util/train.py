@@ -1,4 +1,4 @@
-from numpy import linspace
+from numpy import linspace, argmax
 from .file_manager import *
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
@@ -87,22 +87,36 @@ def container(train_path, test_path, test_original_path):
         ),
             "name": "DecisionTreeClassifier",
             "params": {
-            }}]
+            }}
+    ]
+    results = []
     for idx, clf in enumerate(classifier_container):
         logging.info("[*] ({1}/{2}) Training with {0} ...".format(clf["name"], idx + 1, len(classifier_container)))
         bag = BaggingClassifier(base_estimator=clf["model"])
         # grid = RandomizedSearchCV(bag, param_dist, cv=42, n_iter=300, scoring='accuracy', n_jobs=-1, verbose=2, refit=True)
         grid = GridSearchCV(bag, clf["params"], cv=42, scoring='accuracy', n_jobs=-1, verbose=0, refit=True)
         grid.fit(train_features.iloc[:, 1:-1], train_features['class'].to_list())
-        res = grid.best_estimator_.predict(dev_features.iloc[:, 1:-1])
+        res = grid.best_estimator_.predict_proba(dev_features.iloc[:, 1:-1])
+        results.append(res)
         # clf["model"].fit(train_features.iloc[:, 1:-1], train_features['class'].to_list())
         # res = clf["model"].predict(dev_features.iloc[:, 1:-1])
         # grid.best_estimator_ = clf["model"]
         # grid.best_params_ = None
         # grid.scoring = None
         # grid.cv = None
-        accuracy, scores = my_score(res, test_original_path, True)
+        # accuracy, scores = my_score(res, test_original_path, True)
+        accuracy, scores = my_score(argmax(res, axis=1), test_original_path, True)
         save_model(grid, accuracy, scores)
+    ensemble_res = results[0]
+    for i in range(1, len(results)):
+        ensemble_res += results[i]
+    ensemble_res = argmax(ensemble_res, axis=1).tolist()
+    accuracy, scores = my_score(ensemble_res, test_original_path, True)
+    print("[*] Accuracy: %f" % accuracy)
+    pprint(scores)
+    # save_model(grid, accuracy, scores)
+
+    print()
 
 
 def decision_tree(train_path, test_path, test_original_path):
@@ -124,7 +138,7 @@ def decision_tree(train_path, test_path, test_original_path):
         # "max_depth":[]
     }
 
-    grid = GridSearchCV(clf, param_dist, cv=10, scoring='accuracy', n_jobs=-1, verbose=2)
+    grid = GridSearchCV(clf, param_dist, cv=10, scoring='accuracy', n_jobs=1, verbose=2)
     grid.fit(train_features.iloc[:, 1:-1], train_features['class'].to_list())
 
     # from sklearn.tree.export import export_text
