@@ -20,9 +20,9 @@ def run_train(train_path, evaluate_path):
     remake_dir("models/")
     remake_dir("results/train")
 
-    # merge.merge(train_path)
-    # if train_path != evaluate_path:
-    #     merge.merge(evaluate_path)
+    merge.merge(train_path)
+    if train_path != evaluate_path:
+        merge.merge(evaluate_path)
 
     train_basename = os.path.basename(train_path)
     evaluate_basename = os.path.basename(evaluate_path)
