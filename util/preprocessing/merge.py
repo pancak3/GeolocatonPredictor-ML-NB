@@ -97,7 +97,7 @@ def merge(f_path):
 
         # nb = ComplementNB(alpha=1.0e-10)
         nb = MultinomialNB(alpha=1.0e-10)
-        selector = RFE(estimator=nb, n_features_to_select=300, step=1)
+        selector = RFE(estimator=nb, n_features_to_select=300, step=0.02)
         # selector.fit(new_df.iloc[:, :-1], new_df["class"].to_list())
         # selector = SelectFpr(mutual_info_classif, alpha=1e-3)
         selector.fit_transform(new_df.iloc[:, :-1], new_df["class"].to_list())
