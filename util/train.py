@@ -94,6 +94,7 @@ def container(train_path, test_path, test_original_path):
         logging.info("[*] ({1}/{2}) Training with {0} ...".format(clf["name"], idx + 1, len(classifier_container)))
         bag = BaggingClassifier(base_estimator=clf["model"])
         # grid = RandomizedSearchCV(bag, param_dist, cv=42, n_iter=300, scoring='accuracy', n_jobs=-1, verbose=2, refit=True)
+        # grid = GridSearchCV(bag, clf["params"], cv=42, n_jobs=-1, verbose=0, refit=True)
         grid = GridSearchCV(bag, clf["params"], cv=42, scoring='accuracy', n_jobs=-1, verbose=0, refit=True)
         grid.fit(train_features.iloc[:, 1:-1], train_features['class'].to_list())
         res = grid.best_estimator_.predict_proba(dev_features.iloc[:, 1:-1])

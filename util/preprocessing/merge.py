@@ -110,6 +110,8 @@ def merge(f_path):
 
     features_map = np.append(features_map, [new_df.shape[1] - 1])
     new_df = new_df.iloc[:, features_map]
+    # add_one = new_df.iloc[:, :-1] + 0.001
+    # new_df.update(add_one)
     f_path = os.path.join("myData", "merged_" + filename)
     new_df.to_csv(f_path)
     map_path = os.path.join("myData", "merged_" + filename + ".map")
